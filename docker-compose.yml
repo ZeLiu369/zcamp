@@ -1,0 +1,17 @@
+version: "3.8"
+services:
+  postgres-gis:
+    image: postgis/postgis:16-3.4 # Official PostGIS image
+    platform: linux/amd64
+    container_name: my_gis_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: nationparkyelp
+    ports:
+      - "5432:5432" # Map container port 5432 to your local port 5432
+    volumes:
+      - pg_data:/var/lib/postgresql/data # Persist data
+
+volumes:
+  pg_data:
