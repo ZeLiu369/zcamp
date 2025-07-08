@@ -45,13 +45,13 @@ export function Featured() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {featuredCampgrounds.map((camp) => (
-            <Card key={camp.name}>
-              <CardHeader className="p-0 relative h-60">
+            <Card key={camp.name} className="p-0">
+              <CardHeader className="p-0 relative h-60 rounded-t-xl overflow-hidden">
                 <Image
                   src={camp.imageUrl}
                   alt={`Image of ${camp.name}`}
                   fill
-                  className="rounded-t-lg object-cover"
+                  className="object-cover"
                 />
               </CardHeader>
               <CardContent className="p-6">
