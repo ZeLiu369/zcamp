@@ -8,6 +8,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Star } from "lucide-react";
+import Image from "next/image";
 // Placeholder data until we connect to our API
 const featuredCampgrounds = [
   {
@@ -45,11 +46,12 @@ export function Featured() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {featuredCampgrounds.map((camp) => (
             <Card key={camp.name}>
-              <CardHeader className="p-0">
-                <img
+              <CardHeader className="p-0 relative h-60">
+                <Image
                   src={camp.imageUrl}
                   alt={`Image of ${camp.name}`}
-                  className="rounded-t-lg object-cover h-60 w-full"
+                  fill
+                  className="rounded-t-lg object-cover"
                 />
               </CardHeader>
               <CardContent className="p-6">
