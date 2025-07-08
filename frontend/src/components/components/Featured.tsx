@@ -26,8 +26,7 @@ const featuredCampgrounds = [
     name: "Algonquin Provincial Park",
     province: "Ontario",
     rating: 4,
-    imageUrl:
-      "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=2070&auto=format&fit=crop",
+    imageUrl: "/image/algonquin_camp.jpg",
   },
 ];
 
