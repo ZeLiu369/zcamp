@@ -9,8 +9,8 @@ export function Hero() {
             Discover Your Next Adventure
           </h1>
           <p className="text-gray-500 md:text-xl dark:text-gray-400">
-            Find and review the best campgrounds across North America. Your
-            journey starts here.
+            Find and review campgrounds across North America. Your journey
+            starts here.
           </p>
         </div>
         <div className="mt-6">
