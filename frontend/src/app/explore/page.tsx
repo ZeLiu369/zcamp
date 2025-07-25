@@ -37,6 +37,16 @@ function parseCoords(coords: string): [number, number] | null {
   return [parseFloat(match[1]), parseFloat(match[2])]; // [longitude, latitude]
 }
 
+function getClusterSizeClasses(pointCount: number): string {
+  if (pointCount < 10) {
+    return "w-8 h-8 text-sm"; // Small
+  }
+  if (pointCount < 100) {
+    return "w-10 h-10 text-base"; // Medium
+  }
+  return "w-12 h-12 text-lg"; // Large
+}
+
 export default function ExplorePage() {
   const mapRef = useRef<MapRef>(null);
 
@@ -143,6 +153,9 @@ export default function ExplorePage() {
               // If it's a cluster, display the cluster circle
               if ("point_count" in cluster.properties) {
                 const pointCount = cluster.properties.point_count;
+
+                const sizeClasses = getClusterSizeClasses(pointCount);
+
                 return (
                   <Marker
                     key={`cluster-${cluster.id}`}
@@ -151,7 +164,8 @@ export default function ExplorePage() {
                   >
                     <button
                       type="button" // Good practice to specify the type
-                      className="w-8 h-8 bg-blue-600 text-white font-bold rounded-full flex items-center justify-center cursor-pointer"
+                      className={`bg-blue-500 text-white outline-4 font-bold rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 ease-out ${sizeClasses}`}
+                      // className="w-8 h-8 bg-blue-600 text-white font-bold rounded-full flex items-center justify-center cursor-pointer"
                       onClick={() => {
                         if (!supercluster || !cluster.id || !mapRef.current) {
                           return; // Exit if anything is missing
@@ -188,7 +202,7 @@ export default function ExplorePage() {
                   latitude={latitude}
                   longitude={longitude}
                 >
-                  <div className="h-4 w-4 bg-blue-600 rounded-full border-2 border-white shadow-md cursor-pointer" />
+                  <div className="h-4 w-4 bg-blue-500 rounded-full border-2 border-white shadow-md cursor-pointer" />
                 </Marker>
               );
             })}
