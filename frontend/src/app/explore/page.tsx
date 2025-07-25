@@ -8,7 +8,8 @@ import Map, {
 } from "react-map-gl/mapbox";
 import { useEffect, useState, useMemo, useRef } from "react";
 import useSupercluster from "use-supercluster";
-
+import { useOnClickOutside } from "@/hooks/useOnClickOutside"; // Adjust path as needed
+import { MapIcon, LayersIcon } from "lucide-react";
 // Define a type for our location data for TypeScript safety
 type Location = {
   id: string;
@@ -29,6 +30,13 @@ type GeoJsonPoint = {
     coordinates: [number, number];
   };
 };
+
+const mapStyleOptions = [
+  { name: "Streets", url: "mapbox://styles/mapbox/streets-v12" },
+  { name: "Satellite", url: "mapbox://styles/mapbox/satellite-streets-v12" },
+  { name: "Dark", url: "mapbox://styles/mapbox/dark-v11" },
+  { name: "Outdoors", url: "mapbox://styles/mapbox/outdoors-v12" },
+];
 
 // A simple utility function to parse the coords string
 function parseCoords(coords: string): [number, number] | null {
@@ -55,6 +63,15 @@ export default function ExplorePage() {
     [number, number, number, number] | undefined
   >(undefined);
   const [zoom, setZoom] = useState(3);
+  const [currentMapStyle, setCurrentMapStyle] = useState(
+    mapStyleOptions[0].url
+  );
+  const [isStylePanelOpen, setIsStylePanelOpen] = useState(false);
+
+  const stylePanelRef = useRef<HTMLDivElement>(null);
+
+  // Use the hook to close the panel
+  useOnClickOutside(stylePanelRef, () => setIsStylePanelOpen(false));
 
   useEffect(() => {
     async function fetchLocations() {
@@ -134,12 +151,64 @@ export default function ExplorePage() {
         <h1 className="text-3xl font-bold text-center mb-8">
           Explore All Campgrounds
         </h1>
-        <div className="max-w-full mx-auto h-[60vh] border border-gray-300 rounded-xl overflow-hidden shadow-xl">
+        <div className="relative max-w-full mx-auto h-[60vh] border border-gray-300 rounded-xl overflow-hidden shadow-xl">
+          {/* --- NEW UI --- */}
+          <div className="absolute top-2 right-2 z-10">
+            {/* The main "Map" button */}
+            <button
+              onClick={() => setIsStylePanelOpen(!isStylePanelOpen)}
+              className="bg-white p-2 rounded-lg shadow-md flex items-center gap-2"
+            >
+              <MapIcon className="h-5 w-5" />
+              <span className="font-semibold">Map</span>
+            </button>
+
+            {/* The floating panel - conditionally rendered */}
+            {isStylePanelOpen && (
+              <div
+                ref={stylePanelRef}
+                className="absolute top-full right-0 mt-2 bg-white p-4 rounded-lg shadow-lg w-64"
+              >
+                <h3 className="font-bold text-lg mb-2">Map types</h3>
+                <div className="flex gap-4">
+                  {mapStyleOptions.map((style) => (
+                    <div
+                      key={style.name}
+                      className="flex flex-col items-center"
+                    >
+                      <button
+                        onClick={() => {
+                          setCurrentMapStyle(style.url);
+                          setIsStylePanelOpen(false); // Close panel on selection
+                        }}
+                        className={`w-20 h-20 rounded-lg border-2 overflow-hidden transition-all ${
+                          currentMapStyle === style.url
+                            ? "border-blue-600"
+                            : "border-transparent"
+                        }`}
+                      >
+                        {/* You would add thumbnail images here */}
+                        <img
+                          src={`/images/map-style-${style.name.toLowerCase()}.png`}
+                          alt={style.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                      <span className="mt-1 text-sm font-semibold">
+                        {style.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           <Map
             ref={mapRef}
             mapboxAccessToken={mapboxToken}
             initialViewState={{ longitude: -98.5795, latitude: 50, zoom: 3 }}
-            mapStyle="mapbox://styles/mapbox/streets-v12"
+            mapStyle={currentMapStyle}
             projection="mercator"
             onMove={updateMapState}
             onLoad={updateMapState}
