@@ -6,7 +6,6 @@ import Map, {
   GeolocateControl,
   MapRef,
 } from "react-map-gl/mapbox";
-import { Compass } from "lucide-react";
 import { useEffect, useState, useMemo, useRef } from "react";
 import useSupercluster from "use-supercluster";
 
@@ -189,7 +188,7 @@ export default function ExplorePage() {
                   latitude={latitude}
                   longitude={longitude}
                 >
-                  <Compass className="h-6 w-6 text-red-600 cursor-pointer" />
+                  <div className="h-4 w-4 bg-blue-600 rounded-full border-2 border-white shadow-md cursor-pointer" />
                 </Marker>
               );
             })}
