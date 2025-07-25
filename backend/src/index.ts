@@ -1,12 +1,22 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
+import locationRoutes from './routes'; // <-- Import our new routes
+import cors from 'cors'; // <-- Import the CORS library
 
 const app = express();
-const port = 3001; // We'll use 3001 for the backend server
+const port = 3002;
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('Hello from the Express Backend!');
-});
+// --- Middlewares ---
+// Enable Cross-Origin Resource Sharing so your frontend can call the backend
+app.use(cors()); 
 
+// Middleware to parse JSON bodies (though we don't need it for GET requests, it's good practice)
+app.use(express.json());
+
+// --- API Routes ---
+// Tell the app to use our new router for any URL that starts with /api
+app.use('/api', locationRoutes);
+
+// --- Server Startup ---
 app.listen(port, () => {
   console.log(`Backend server is running at http://localhost:${port}`);
 });
