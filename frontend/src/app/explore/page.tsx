@@ -4,9 +4,11 @@ import Map, {
   Marker,
   NavigationControl,
   GeolocateControl,
+  MapRef,
 } from "react-map-gl/mapbox";
 import { Compass } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
+import useSupercluster from "use-supercluster";
 
 // Define a type for our location data for TypeScript safety
 type Location = {
@@ -15,21 +17,35 @@ type Location = {
   coords: string; // e.g., "POINT(-98.5795 39.8283)"
 };
 
+// Define the structure for a GeoJSON point, which supercluster needs
+type GeoJsonPoint = {
+  type: "Feature";
+  properties: {
+    cluster: boolean;
+    locationId: string;
+    name: string;
+  };
+  geometry: {
+    type: "Point";
+    coordinates: [number, number];
+  };
+};
+
 // A simple utility function to parse the coords string
-function parseCoords(
-  coords: string
-): { longitude: number; latitude: number } | null {
+function parseCoords(coords: string): [number, number] | null {
   const match = /POINT\(([-\d.]+) ([-\d.]+)\)/.exec(coords);
   if (!match) return null;
-  return {
-    longitude: parseFloat(match[1]),
-    latitude: parseFloat(match[2]),
-  };
+  return [parseFloat(match[1]), parseFloat(match[2])]; // [longitude, latitude]
 }
 
 export default function ExplorePage() {
-  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+  const mapRef = useRef<MapRef>(null);
+
   const [locations, setLocations] = useState<Location[]>([]);
+  const [bounds, setBounds] = useState<
+    [number, number, number, number] | undefined
+  >(undefined);
+  const [zoom, setZoom] = useState(3);
 
   useEffect(() => {
     async function fetchLocations() {
@@ -48,6 +64,49 @@ export default function ExplorePage() {
 
     fetchLocations();
   }, []); // The empty array [] ensures this effect runs only once
+
+  const points = useMemo(
+    () =>
+      locations
+        .map((loc) => {
+          const coords = parseCoords(loc.coords);
+          if (!coords) return null;
+          return {
+            type: "Feature",
+            properties: { cluster: false, locationId: loc.id, name: loc.name },
+            geometry: { type: "Point", coordinates: coords },
+          };
+        })
+        .filter((point): point is GeoJsonPoint => point !== null),
+    [locations]
+  );
+
+  const updateMapState = () => {
+    // Use optional chaining `?.` for safety in case the ref isn't ready
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+
+    const mapBounds = map.getBounds();
+    if (!mapBounds) return;
+
+    // FIX: Manually construct the array to match the tuple type
+    setBounds([
+      mapBounds.getWest(),
+      mapBounds.getSouth(),
+      mapBounds.getEast(),
+      mapBounds.getNorth(),
+    ]);
+    setZoom(map.getZoom());
+  };
+
+  const { clusters, supercluster } = useSupercluster({
+    points,
+    bounds,
+    zoom,
+    options: { radius: 40, maxZoom: 16 },
+  });
+
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
   if (!mapboxToken) {
     return (
@@ -68,32 +127,69 @@ export default function ExplorePage() {
         </h1>
         <div className="max-w-full mx-auto h-[60vh] border border-gray-300 rounded-xl overflow-hidden shadow-xl">
           <Map
+            ref={mapRef}
             mapboxAccessToken={mapboxToken}
-            initialViewState={{
-              longitude: -98.5795,
-              latitude: 39.8283,
-              zoom: 3,
-            }}
+            initialViewState={{ longitude: -98.5795, latitude: 50, zoom: 3 }}
             mapStyle="mapbox://styles/mapbox/streets-v12"
             projection="mercator"
+            onMove={updateMapState}
+            onLoad={updateMapState}
           >
-            <NavigationControl position="top-right" />
+            <NavigationControl />
             <GeolocateControl />
 
-            {/* Step 2: Loop over the fetched data and create a Marker for each location */}
-            {locations.map((loc) => {
-              const coords = parseCoords(loc.coords);
-              if (!coords) return null;
+            {clusters.map((cluster) => {
+              const [longitude, latitude] = cluster.geometry.coordinates;
 
+              // If it's a cluster, display the cluster circle
+              if ("point_count" in cluster.properties) {
+                const pointCount = cluster.properties.point_count;
+                return (
+                  <Marker
+                    key={`cluster-${cluster.id}`}
+                    latitude={latitude}
+                    longitude={longitude}
+                  >
+                    <button
+                      type="button" // Good practice to specify the type
+                      className="w-8 h-8 bg-blue-600 text-white font-bold rounded-full flex items-center justify-center cursor-pointer"
+                      onClick={() => {
+                        if (!supercluster || !cluster.id || !mapRef.current) {
+                          return; // Exit if anything is missing
+                        }
+
+                        const expansionZoom = Math.min(
+                          // FIX: Convert cluster.id to a number to match the expected type.
+                          supercluster.getClusterExpansionZoom(
+                            Number(cluster.id)
+                          ),
+                          20
+                        );
+
+                        if (mapRef.current) {
+                          // Add a safety check for the ref
+                          mapRef.current.getMap().easeTo({
+                            center: [longitude, latitude],
+                            zoom: expansionZoom,
+                            duration: 500,
+                          });
+                        }
+                      }}
+                    >
+                      {pointCount}
+                    </button>
+                  </Marker>
+                );
+              }
+
+              // If it's a single point, display the original marker
               return (
                 <Marker
-                  key={loc.id}
-                  longitude={coords.longitude}
-                  latitude={coords.latitude}
-                  anchor="bottom"
+                  key={`location-${cluster.properties.locationId}`}
+                  latitude={latitude}
+                  longitude={longitude}
                 >
-                  {/* This is the visual pin on the map. We use a simple icon for now. */}
-                  <Compass className="h-6 w-6 text-blue-600 cursor-pointer" />
+                  <Compass className="h-6 w-6 text-red-600 cursor-pointer" />
                 </Marker>
               );
             })}
