@@ -59,7 +59,9 @@ export default function ExplorePage() {
   useEffect(() => {
     async function fetchLocations() {
       try {
-        const response = await fetch("http://localhost:3002/api/locations");
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations`;
+        console.log(`Fetching from: ${apiUrl}`);
+        const response = await fetch(apiUrl);
         if (!response.ok) {
           throw new Error("Failed to fetch locations");
         }
@@ -141,7 +143,7 @@ export default function ExplorePage() {
             initialViewState={{ longitude: -98.5795, latitude: 50, zoom: 3 }}
             mapStyle="mapbox://styles/mapbox/streets-v12"
             projection="mercator"
-            onMove={updateMapState}
+            onMoveEnd={updateMapState}
             onLoad={updateMapState}
           >
             <NavigationControl />
