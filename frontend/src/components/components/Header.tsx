@@ -49,7 +49,9 @@ export function Header() {
         <Button variant="outline" size="sm">
           Login
         </Button>
-        <Button size="sm">Sign up</Button>
+        <Button size="sm" asChild>
+          <Link href="/signup">Sign up</Link>
+        </Button>
       </nav>
 
       {/* mobile menu toggle */}
@@ -103,8 +105,11 @@ export function Header() {
             >
               Login
             </Button>
-            <Button size="sm" className="w-full" onClick={handleLinkClick}>
-              Sign up
+
+            <Button size="sm" className="w-full" asChild>
+              <Link href="/signup" onClick={handleLinkClick}>
+                Sign up
+              </Link>
             </Button>
           </div>
         </div>
