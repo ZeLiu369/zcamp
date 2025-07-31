@@ -1,5 +1,5 @@
-// In frontend/src/app/signup/page.tsx
-"use client";
+// In frontend/src/app/login/page.tsx
+"use client"; // 表单需要客户端交互
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,48 +13,48 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation"; // Import the router for redirection
+import { useRouter } from "next/navigation";
 
-export default function SignUpPage() {
-  // Step 1: Create state variables to hold the form data and any messages
-  const [username, setUsername] = useState("");
+export default function LoginPage() {
+  // 为表单字段和消息创建 state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const router = useRouter(); // Initialize the router
+  const router = useRouter();
 
-  // Step 2: Create a function to handle the form submission
+  // 处理表单提交的函数
   const handleSubmit = async (event: FormEvent) => {
-    // Prevent the default browser behavior of refreshing the page
     event.preventDefault();
-    setError(null); // Reset errors on new submission
-    setSuccess(null);
+    setError(null);
 
     try {
-      // Step 3: Send the form data to your backend API
-      const response = await fetch("http://localhost:3002/api/auth/register", {
+      // Step 1: Send the form data to your backend login endpoint
+      const response = await fetch("http://localhost:3002/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
-      // Step 4: Handle the response from the server
       if (!response.ok) {
-        // If the server returns an error (e.g., 409 Conflict), display it
-        throw new Error(data.error || "Something went wrong");
+        throw new Error(data.error || "Login failed.");
       }
 
-      // On success:
-      setSuccess("Registration successful! Redirecting to login...");
-      // Redirect to the login page after a short delay
-      setTimeout(() => {
-        router.push("/login");
-      }, 2000);
+      // Step 2: On success, get the token from the response
+      const { token } = data;
+      if (token) {
+        // Step 3: Store the token in the browser's localStorage
+        localStorage.setItem("authToken", token);
+        console.log("Login successful, token stored.");
+
+        // Step 4: Redirect the user to the homepage
+        router.push("/");
+      } else {
+        throw new Error("No token received from server.");
+      }
     } catch (err: any) {
       setError(err.message);
     }
@@ -64,26 +64,13 @@ export default function SignUpPage() {
     <div className="flex items-center justify-center min-h-[calc(100vh-56px)] bg-gray-100 dark:bg-gray-950 px-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Sign Up</CardTitle>
+          <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>
-            Enter your information to create an account.
+            Enter your email below to login to your account.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Connect the handleSubmit function to the form's onSubmit event */}
           <form onSubmit={handleSubmit} className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="username">Username</Label>
-              {/* Connect the input to the state using `value` and `onChange` */}
-              <Input
-                id="username"
-                type="text"
-                placeholder="Your username"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -106,21 +93,18 @@ export default function SignUpPage() {
               />
             </div>
             <Button type="submit" className="w-full">
-              Create an account
+              Login
             </Button>
 
-            {/* Display success or error messages to the user */}
-            {success && (
-              <p className="text-sm text-green-500 text-center">{success}</p>
-            )}
+            {/* 显示错误信息 */}
             {error && (
               <p className="text-sm text-red-500 text-center">{error}</p>
             )}
           </form>
           <div className="mt-4 text-center text-sm">
-            Already have an account?{" "}
-            <Link href="/login" className="underline">
-              Login
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="underline">
+              Sign up
             </Link>
           </div>
         </CardContent>
