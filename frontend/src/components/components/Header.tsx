@@ -102,6 +102,7 @@ export function Header() {
               size="sm"
               className="w-full"
               onClick={handleLinkClick}
+              asChild
             >
               Login
             </Button>

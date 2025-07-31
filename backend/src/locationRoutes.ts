@@ -10,10 +10,10 @@ const pool = new Pool({
     database: 'nationparkyelp',
 });
 
-const router = Router();
+const locationRoutes = Router();
 
 // Define the API endpoint: GET /api/locations
-router.get('/locations', async (req: Request, res: Response) => {
+locationRoutes.get('/locations', async (req: Request, res: Response) => {
     try {
         const client = await pool.connect();
         try {
@@ -31,4 +31,4 @@ router.get('/locations', async (req: Request, res: Response) => {
     }
 });
 
-export default router;
+export default locationRoutes;
