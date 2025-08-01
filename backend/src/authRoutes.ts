@@ -184,4 +184,59 @@ authRoutes.post('/forgot-password', async (req: Request, res: Response): Promise
     }
 });
 
+
+authRoutes.post('/reset-password', async (req: Request, res: Response): Promise<any> => {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+        return res.status(400).json({ error: 'Token and new password are required.' });
+    }
+
+    // Hash the incoming token so we can find it in the database
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN'); // Start transaction
+
+        // Find the token in the database and ensure it has not expired
+        const tokenResult = await client.query(
+            'SELECT * FROM password_reset_tokens WHERE token_hash = $1 AND expires_at > NOW()',
+            [hashedToken]
+        );
+
+        const resetRequest = tokenResult.rows[0];
+        if (!resetRequest) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ error: 'Token is invalid or has expired.' });
+        }
+
+        const { email } = resetRequest;
+
+        // Hash the new password
+        const salt = await bcrypt.genSalt(10);
+        const password_hash = await bcrypt.hash(newPassword, salt);
+
+        // Update the user's password in the main users table
+        await client.query(
+            'UPDATE users SET password_hash = $1 WHERE email = $2',
+            [password_hash, email]
+        );
+
+        // Invalidate the token by deleting it so it cannot be used again
+        await client.query('DELETE FROM password_reset_tokens WHERE email = $1', [email]);
+        
+        await client.query('COMMIT'); // Commit all changes
+
+        res.status(200).json({ message: 'Password has been reset successfully.' });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Reset password error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+});
+
 export default authRoutes;
