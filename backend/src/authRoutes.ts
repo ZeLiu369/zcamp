@@ -125,22 +125,33 @@ authRoutes.post('/forgot-password', async (req: Request, res: Response): Promise
 
     const client = await pool.connect();
     try {
+        // --- TRANSACTION START ---
+        await client.query('BEGIN');
+
         // Check if user exists
         const userResult = await client.query('SELECT * FROM users WHERE email = $1', [email]);
         if (userResult.rows.length === 0) {
+            await client.query('ROLLBACK');
             // We don't want to reveal if an email exists or not for security reasons
             return res.status(200).json({ message: 'If a user with that email exists, a reset link has been sent.' });
         }
 
         // Generate a secure token
-        const token = crypto.randomBytes(32).toString('hex');
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        // Hash the token to store in the database
+        const token_hash = crypto.createHash('sha256').update(resetToken).digest('hex');
         const expires_at = new Date(Date.now() + 3600000); // Token expires in 1 hour
+
+        // Step 1: Delete any old, unused tokens for this user.
+        await client.query('DELETE FROM password_reset_tokens WHERE email = $1', [email]);
 
         // Store token in the database
         await client.query(
-            'INSERT INTO password_reset_tokens (email, token, expires_at) VALUES ($1, $2, $3)',
-            [email, token, expires_at]
+            'INSERT INTO password_reset_tokens (email, token_hash, expires_at) VALUES ($1, $2, $3)',
+            [email, token_hash, expires_at]
         );
+
+        await client.query('COMMIT');
 
         // Configure email transport using Mailtrap credentials from .env
         const transport = nodemailer.createTransport({
@@ -152,7 +163,7 @@ authRoutes.post('/forgot-password', async (req: Request, res: Response): Promise
             },
         });
         
-        const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+        const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
         
         // Send the email
         await transport.sendMail({
@@ -165,6 +176,7 @@ authRoutes.post('/forgot-password', async (req: Request, res: Response): Promise
         res.status(200).json({ message: 'If a user with that email exists, a reset link has been sent.' });
 
     } catch (error) {
+        await client.query('ROLLBACK');
         console.error('Forgot password error:', error);
         res.status(500).json({ error: 'Internal server error' });
     } finally {

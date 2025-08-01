@@ -124,7 +124,7 @@ export default function ExplorePage() {
       <div className="flex items-center justify-center h-full">
         <p className="text-red-500 font-bold">
           Error: Mapbox access token is not configured. Please check your
-          .env.local file.
+          .env file.
         </p>
       </div>
     );
