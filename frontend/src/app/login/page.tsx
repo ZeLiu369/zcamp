@@ -92,6 +92,15 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
+            <div className="text-right">
+              <Link
+                href="/forgot-password"
+                className="text-sm underline"
+                prefetch={false}
+              >
+                Forgot your password?
+              </Link>
+            </div>
             <Button type="submit" className="w-full">
               Login
             </Button>

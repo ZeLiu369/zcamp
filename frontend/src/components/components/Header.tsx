@@ -46,8 +46,8 @@ export function Header() {
         >
           About
         </Link>
-        <Button variant="outline" size="sm">
-          Login
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/login">Login</Link>
         </Button>
         <Button size="sm" asChild>
           <Link href="/signup">Sign up</Link>
@@ -97,16 +97,11 @@ export function Header() {
             >
               About
             </Link>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={handleLinkClick}
-              asChild
-            >
-              Login
+            <Button variant="outline" size="sm" className="w-full" asChild>
+              <Link href="/login" onClick={handleLinkClick}>
+                Login
+              </Link>
             </Button>
-
             <Button size="sm" className="w-full" asChild>
               <Link href="/signup" onClick={handleLinkClick}>
                 Sign up

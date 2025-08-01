@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import nodemailer from 'nodemailer';
 
 // Re-using the same pool configuration
 const pool = new Pool({
@@ -112,6 +114,61 @@ authRoutes.post('/login', async (req: Request, res: Response): Promise<any> => {
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+authRoutes.post('/forgot-password', async (req: Request, res: Response): Promise<any> => {
+    const { email } = req.body;
+    if (!email) {
+        return res.status(400).json({ error: 'Email is required.' });
+    }
+
+    const client = await pool.connect();
+    try {
+        // Check if user exists
+        const userResult = await client.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (userResult.rows.length === 0) {
+            // We don't want to reveal if an email exists or not for security reasons
+            return res.status(200).json({ message: 'If a user with that email exists, a reset link has been sent.' });
+        }
+
+        // Generate a secure token
+        const token = crypto.randomBytes(32).toString('hex');
+        const expires_at = new Date(Date.now() + 3600000); // Token expires in 1 hour
+
+        // Store token in the database
+        await client.query(
+            'INSERT INTO password_reset_tokens (email, token, expires_at) VALUES ($1, $2, $3)',
+            [email, token, expires_at]
+        );
+
+        // Configure email transport using Mailtrap credentials from .env
+        const transport = nodemailer.createTransport({
+            host: process.env.MAIL_HOST,
+            port: Number(process.env.MAIL_PORT),
+            auth: {
+                user: process.env.MAIL_USER,
+                pass: process.env.MAIL_PASS,
+            },
+        });
+        
+        const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+        
+        // Send the email
+        await transport.sendMail({
+            from: '"CampFinder Support" <support@campfinder.com>',
+            to: email,
+            subject: 'Your Password Reset Link',
+            html: `<p>Please click the following link to reset your password:</p><p><a href="${resetLink}">${resetLink}</a></p>`,
+        });
+
+        res.status(200).json({ message: 'If a user with that email exists, a reset link has been sent.' });
+
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
     }
 });
 
