@@ -1,0 +1,175 @@
+import { Router, Request, Response } from 'express';
+import { Pool } from 'pg';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import nodemailer from 'nodemailer';
+
+// Re-using the same pool configuration
+const pool = new Pool({
+    user: 'postgres',      // <-- PUT YOUR USERNAME HERE
+    password: 'postgres',  // <-- PUT YOUR PASSWORD HERE
+    host: 'localhost',
+    port: 5432,
+    database: 'nationparkyelp',
+});
+const authRoutes = Router();
+
+// Define the API endpoint: POST /api/auth/register
+authRoutes.post('/register', async (req: Request, res: Response): Promise<any> => {
+    const { username, email, password } = req.body;
+
+    // Basic validation
+    if (!username || !email || !password) {
+        return res.status(400).json({ error: 'Username, email, and password are required.' });
+    }
+
+    try {
+        // Step 1: Hash the password
+        const salt = await bcrypt.genSalt(10);
+        const password_hash = await bcrypt.hash(password, salt);
+
+        // Step 2: Save the new user to the database
+        const client = await pool.connect();
+        try {
+            const insertQuery = `
+                INSERT INTO users (username, email, password_hash)
+                VALUES ($1, $2, $3)
+                RETURNING id, username, email, created_at;
+            `;
+            const values = [username, email, password_hash];
+            const result = await client.query(insertQuery, values);
+            const newUser = result.rows[0];
+
+            // Step 3: Send a success response
+            // We don't send the password hash back to the client
+            res.status(201).json({ 
+                message: 'User created successfully!',
+                user: newUser 
+            });
+
+        } catch (dbError: any) {
+            // Handle potential database errors, like a duplicate username or email
+            if (dbError.code === '23505') { // Unique violation error code
+                return res.status(409).json({ error: 'Username or email already exists.' });
+            }
+            throw dbError; // Re-throw other errors
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error('Error during registration:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+authRoutes.post('/login', async (req: Request, res: Response): Promise<any> => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required.' });
+    }
+
+    try {
+        const client = await pool.connect();
+        try {
+            // Step 1: Find the user by their email
+            const result = await client.query('SELECT * FROM users WHERE email = $1', [email]);
+            const user = result.rows[0];
+
+            if (!user) {
+                return res.status(401).json({ error: 'Invalid credentials.Either email or password is incorrect.' }); // Use a generic error
+            }
+
+            // Step 2: Compare the submitted password with the stored hash
+            const isMatch = await bcrypt.compare(password, user.password_hash);
+            if (!isMatch) {
+                return res.status(401).json({ error: 'Invalid credentials.Either email or password is incorrect.' }); // Use a generic error
+            }
+
+            // Step 3: If passwords match, create a JWT payload
+            const payload = {
+                user: {
+                    id: user.id,
+                    username: user.username,
+                },
+            };
+
+            // Step 4: Sign the token with your secret key
+            jwt.sign(
+                payload,
+                process.env.JWT_SECRET as string,
+                { expiresIn: '7d' }, // Token expires in 1 hour
+                (err, token) => {
+                    if (err) throw err;
+                    // Step 5: Send the token back to the client
+                    res.status(200).json({ token });
+                }
+            );
+
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error('Error during login:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+authRoutes.post('/forgot-password', async (req: Request, res: Response): Promise<any> => {
+    const { email } = req.body;
+    if (!email) {
+        return res.status(400).json({ error: 'Email is required.' });
+    }
+
+    const client = await pool.connect();
+    try {
+        // Check if user exists
+        const userResult = await client.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (userResult.rows.length === 0) {
+            // We don't want to reveal if an email exists or not for security reasons
+            return res.status(200).json({ message: 'If a user with that email exists, a reset link has been sent.' });
+        }
+
+        // Generate a secure token
+        const token = crypto.randomBytes(32).toString('hex');
+        const expires_at = new Date(Date.now() + 3600000); // Token expires in 1 hour
+
+        // Store token in the database
+        await client.query(
+            'INSERT INTO password_reset_tokens (email, token, expires_at) VALUES ($1, $2, $3)',
+            [email, token, expires_at]
+        );
+
+        // Configure email transport using Mailtrap credentials from .env
+        const transport = nodemailer.createTransport({
+            host: process.env.MAIL_HOST,
+            port: Number(process.env.MAIL_PORT),
+            auth: {
+                user: process.env.MAIL_USER,
+                pass: process.env.MAIL_PASS,
+            },
+        });
+        
+        const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+        
+        // Send the email
+        await transport.sendMail({
+            from: '"CampFinder Support" <support@campfinder.com>',
+            to: email,
+            subject: 'Your Password Reset Link',
+            html: `<p>Please click the following link to reset your password:</p><p><a href="${resetLink}">${resetLink}</a></p>`,
+        });
+
+        res.status(200).json({ message: 'If a user with that email exists, a reset link has been sent.' });
+
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+});
+
+export default authRoutes;

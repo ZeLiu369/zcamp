@@ -1,4 +1,4 @@
-import { Hero } from "@/components/components/Hero"; // Import our new Hero component
+import { Hero } from "@/components/components/Hero";
 import { Featured } from "@/components/components/Featured";
 import { CTA } from "@/components/components/CTA";
 
