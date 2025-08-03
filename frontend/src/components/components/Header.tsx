@@ -4,9 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { MountainIcon, MenuIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/app/context/AuthContext";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, logout, isLoading } = useAuth();
 
   const toggleMenu = () => {
     setMobileMenuOpen((open) => !open);
@@ -46,12 +48,27 @@ export function Header() {
         >
           About
         </Link>
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/login">Login</Link>
-        </Button>
-        <Button size="sm" asChild>
-          <Link href="/signup">Sign up</Link>
-        </Button>
+        {isLoading ? (
+          <div className="h-8 w-20 bg-gray-200 rounded-md animate-pulse"></div>
+        ) : user ? (
+          <>
+            <span className="text-sm font-medium">
+              Welcome, {user.username}!
+            </span>
+            <Button variant="outline" size="sm" onClick={logout}>
+              Logout
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/login">Login</Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link href="/signup">Sign Up</Link>
+            </Button>
+          </>
+        )}
       </nav>
 
       {/* mobile menu toggle */}
@@ -97,16 +114,27 @@ export function Header() {
             >
               About
             </Link>
-            <Button variant="outline" size="sm" className="w-full" asChild>
-              <Link href="/login" onClick={handleLinkClick}>
-                Login
-              </Link>
-            </Button>
-            <Button size="sm" className="w-full" asChild>
-              <Link href="/signup" onClick={handleLinkClick}>
-                Sign up
-              </Link>
-            </Button>
+            {isLoading ? (
+              <div className="h-8 w-20 bg-gray-200 rounded-md animate-pulse"></div>
+            ) : user ? (
+              <>
+                <span className="text-sm font-medium">
+                  Welcome, {user.username}!
+                </span>
+                <Button variant="outline" size="sm" onClick={logout}>
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/login">Login</Link>
+                </Button>
+                <Button asChild size="sm">
+                  <Link href="/signup">Sign Up</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}

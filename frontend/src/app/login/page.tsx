@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function LoginPage() {
   // 为表单字段和消息创建 state
@@ -21,6 +22,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { login } = useAuth();
 
   // 处理表单提交的函数
   const handleSubmit = async (event: FormEvent) => {
@@ -47,7 +49,7 @@ export default function LoginPage() {
       const { token } = data;
       if (token) {
         // Step 3: Store the token in the browser's localStorage
-        localStorage.setItem("authToken", token);
+        login(token);
         console.log("Login successful, token stored.");
 
         // Step 4: Redirect the user to the homepage
