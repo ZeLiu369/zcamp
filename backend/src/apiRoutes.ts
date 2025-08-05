@@ -2,6 +2,15 @@
 
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
+import { Pool } from 'pg';
+
+const pool = new Pool({
+    user: 'postgres',      
+    password: 'postgres', 
+    host: 'localhost',
+    port: 5432,
+    database: 'nationparkyelp',
+});
 
 const apiRoutes = Router();
 
@@ -78,5 +87,69 @@ apiRoutes.get('/reverse-geocode', async (req: Request, res: Response): Promise<a
     }
 });
 
+
+// 新增：获取单个露营地及其评论的终点
+// GET /api/locations/:id
+apiRoutes.get('/locations/:id', async (req: Request, res: Response): Promise<any> => {
+    const { id } = req.params; // 从 URL 中获取 ID
+  
+    try {
+      const client = await pool.connect();
+      try {
+        // 这是一个更高级的 SQL 查询
+        // 它从 locations 表中选择一个露营地
+        // 并且使用 LEFT JOIN 来包含所有相关的评论和评论者的用户名
+        // COALESCE 和 json_agg 是 PostgreSQL 的强大功能，
+        // 它们可以将所有评论聚合成一个 JSON 数组，即使没有评论也是如此
+        const query = `
+          SELECT
+            l.id,
+            l.name,
+            l.osm_tags,
+            ST_AsGeoJSON(l.coordinates) as coordinates,
+            COALESCE(
+              json_agg(
+                json_build_object(
+                  'id', r.id,
+                  'rating', r.rating,
+                  'comment', r.comment,
+                  'created_at', r.created_at,
+                  'username', u.username
+                )
+              ) FILTER (WHERE r.id IS NOT NULL),
+              '[]'
+            ) as reviews
+          FROM
+            locations l
+          LEFT JOIN
+            reviews r ON l.id = r.location_id
+          LEFT JOIN
+            users u ON r.user_id = u.id
+          WHERE
+            l.id = $1
+          GROUP BY
+            l.id;
+        `;
+        
+        const result = await client.query(query, [id]);
+  
+        if (result.rows.length === 0) {
+          return res.status(404).json({ error: 'Location not found.' });
+        }
+        
+        // 解析 coordinates 字符串为 JSON 对象
+        const location = result.rows[0];
+        location.coordinates = JSON.parse(location.coordinates);
+  
+        res.status(200).json(location);
+  
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      console.error(`Error fetching location with id ${id}:`, error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 
 export default apiRoutes;
