@@ -13,10 +13,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useState, FormEvent, useEffect } from "react";
+import { useState, FormEvent, useEffect, useRef } from "react";
 import "mapbox-gl/dist/mapbox-gl.css"; // 导入 Mapbox CSS
 import Map, { Marker } from "react-map-gl/mapbox"; // 导入 Map 和 Marker
 import { Compass } from "lucide-react";
+import { AddressSearch } from "@/components/components/AddressSearch";
 
 // 定义新图钉的状态结构
 interface NewPin {
@@ -34,12 +35,22 @@ export default function AddCampgroundPage() {
   const { user, token, isLoading } = useAuth();
   const router = useRouter();
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+  const mapRef = useRef<MapRef>(null);
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.push("/login");
     }
   }, [user, isLoading, router]);
+
+  const handleAddressSelect = (coords: NewPin) => {
+    setNewPin(coords);
+    // Fly the map to the selected location
+    mapRef.current?.flyTo({
+      center: [coords.longitude, coords.latitude],
+      zoom: 14,
+    });
+  };
 
   // 当用户点击地图时调用的处理函数
   const handleMapClick = (event: mapboxgl.MapMouseEvent) => {
@@ -95,7 +106,7 @@ export default function AddCampgroundPage() {
         <CardHeader>
           <CardTitle className="text-2xl">Add a New Campground</CardTitle>
           <CardDescription>
-            Click on the map to place a pin for the new location.
+            Search for an address or click on the map to place a pin.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -111,10 +122,15 @@ export default function AddCampgroundPage() {
                 onChange={(e) => setName(e.target.value)}
               />
             </div>
+            <div className="grid gap-2">
+              <Label>Address</Label>
+              <AddressSearch onSelect={handleAddressSelect} />
+            </div>
 
             {/* 交互式地图 */}
-            <div className="h-80 w-full rounded-md overflow-hidden border">
+            <div className="h-96 w-full rounded-md overflow-hidden border">
               <Map
+                ref={mapRef}
                 mapboxAccessToken={mapboxToken}
                 initialViewState={{
                   longitude: -98.5795,
@@ -122,9 +138,13 @@ export default function AddCampgroundPage() {
                   zoom: 3,
                 }}
                 mapStyle="mapbox://styles/mapbox/streets-v12"
-                onClick={handleMapClick} // 绑定点击事件
+                onClick={(e) =>
+                  handleAddressSelect({
+                    longitude: e.lngLat.lng,
+                    latitude: e.lngLat.lat,
+                  })
+                }
               >
-                {/* 如果用户已放置图钉，则显示它 */}
                 {newPin && (
                   <Marker
                     longitude={newPin.longitude}
