@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Yelp Camp",
-  description: "Find your next camping site",
+  title: "CampFinder",
+  description: "Discover and review campgrounds across North America.",
 };
 
 export default function RootLayout({

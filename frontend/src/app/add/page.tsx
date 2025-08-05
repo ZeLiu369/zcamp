@@ -1,0 +1,153 @@
+// In frontend/src/app/add/page.tsx
+"use client";
+
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/app/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useState, FormEvent, useEffect } from "react";
+import "mapbox-gl/dist/mapbox-gl.css"; // 导入 Mapbox CSS
+import Map, { Marker } from "react-map-gl/mapbox"; // 导入 Map 和 Marker
+import { Compass } from "lucide-react";
+
+// 定义新图钉的状态结构
+interface NewPin {
+  latitude: number;
+  longitude: number;
+}
+
+export default function AddCampgroundPage() {
+  const [name, setName] = useState("");
+  // 新增 state 用于存储用户点击地图后新图钉的位置
+  const [newPin, setNewPin] = useState<NewPin | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const { user, token, isLoading } = useAuth();
+  const router = useRouter();
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/login");
+    }
+  }, [user, isLoading, router]);
+
+  // 当用户点击地图时调用的处理函数
+  const handleMapClick = (event: mapboxgl.MapMouseEvent) => {
+    const { lng, lat } = event.lngLat;
+    setNewPin({ longitude: lng, latitude: lat });
+  };
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    // 检查用户是否已在地图上放置图钉
+    if (!newPin) {
+      setError("Please select a location on the map.");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:3002/api/locations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        // 使用从地图状态中获取的经纬度
+        body: JSON.stringify({
+          name,
+          latitude: newPin.latitude,
+          longitude: newPin.longitude,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to add campground.");
+
+      setSuccess(`Successfully added ${data.name}!`);
+      setName("");
+      setNewPin(null); // 提交成功后清空图钉
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  if (isLoading || !user) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div className="flex items-center justify-center min-h-[calc(100vh-56px)] bg-gray-100 dark:bg-gray-950 px-4 py-12">
+      <Card className="w-full max-w-lg">
+        <CardHeader>
+          <CardTitle className="text-2xl">Add a New Campground</CardTitle>
+          <CardDescription>
+            Click on the map to place a pin for the new location.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="grid gap-6">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Campground Name</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="e.g., Butter Pot Provincial Park"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+
+            {/* 交互式地图 */}
+            <div className="h-80 w-full rounded-md overflow-hidden border">
+              <Map
+                mapboxAccessToken={mapboxToken}
+                initialViewState={{
+                  longitude: -98.5795,
+                  latitude: 50,
+                  zoom: 3,
+                }}
+                mapStyle="mapbox://styles/mapbox/streets-v12"
+                onClick={handleMapClick} // 绑定点击事件
+              >
+                {/* 如果用户已放置图钉，则显示它 */}
+                {newPin && (
+                  <Marker
+                    longitude={newPin.longitude}
+                    latitude={newPin.latitude}
+                  >
+                    <Compass className="h-8 w-8 text-red-600" />
+                  </Marker>
+                )}
+              </Map>
+            </div>
+
+            <Button type="submit" className="w-full">
+              Add Campground
+            </Button>
+            {success && (
+              <p className="text-sm text-green-500 text-center">{success}</p>
+            )}
+            {error && (
+              <p className="text-sm text-red-500 text-center">{error}</p>
+            )}
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
