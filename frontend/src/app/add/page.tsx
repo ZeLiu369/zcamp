@@ -14,12 +14,11 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useState, FormEvent, useEffect, useRef } from "react";
-import "mapbox-gl/dist/mapbox-gl.css"; // 导入 Mapbox CSS
-import Map, { Marker, MapRef } from "react-map-gl/mapbox"; // 导入 Map 和 Marker
+import "mapbox-gl/dist/mapbox-gl.css";
+import Map, { Marker, MapRef } from "react-map-gl/mapbox";
 import { MapPin } from "lucide-react";
 import { AddressSearch } from "@/components/components/AddressSearch";
 
-// 定义新图钉的状态结构
 interface NewPin {
   latitude: number;
   longitude: number;
@@ -27,7 +26,6 @@ interface NewPin {
 
 export default function AddCampgroundPage() {
   const [name, setName] = useState("");
-  // 新增 state 用于存储用户点击地图后新图钉的位置
   const [newPin, setNewPin] = useState<NewPin | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -54,7 +52,6 @@ export default function AddCampgroundPage() {
     });
   };
 
-  // 当用户点击地图时调用的处理函数
   const handleMapClick = async (event: mapboxgl.MapMouseEvent) => {
     const { lng, lat } = event.lngLat;
     setNewPin({ longitude: lng, latitude: lat });
