@@ -18,11 +18,18 @@ interface Suggestion {
 }
 
 interface AddressSearchProps {
+  // 新增：接收来自父组件的 query 值
+  query: string;
+  // 新增：允许父组件更新 query 值
+  setQuery: (query: string) => void;
   onSelect: (coords: { latitude: number; longitude: number }) => void;
 }
 
-export function AddressSearch({ onSelect }: AddressSearchProps) {
-  const [query, setQuery] = useState("");
+export function AddressSearch({
+  query,
+  setQuery,
+  onSelect,
+}: AddressSearchProps) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);

@@ -15,8 +15,8 @@ import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useState, FormEvent, useEffect, useRef } from "react";
 import "mapbox-gl/dist/mapbox-gl.css"; // 导入 Mapbox CSS
-import Map, { Marker } from "react-map-gl/mapbox"; // 导入 Map 和 Marker
-import { Compass } from "lucide-react";
+import Map, { Marker, MapRef } from "react-map-gl/mapbox"; // 导入 Map 和 Marker
+import { MapPin } from "lucide-react";
 import { AddressSearch } from "@/components/components/AddressSearch";
 
 // 定义新图钉的状态结构
@@ -31,6 +31,8 @@ export default function AddCampgroundPage() {
   const [newPin, setNewPin] = useState<NewPin | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const [addressQuery, setAddressQuery] = useState("");
 
   const { user, token, isLoading } = useAuth();
   const router = useRouter();
@@ -53,9 +55,25 @@ export default function AddCampgroundPage() {
   };
 
   // 当用户点击地图时调用的处理函数
-  const handleMapClick = (event: mapboxgl.MapMouseEvent) => {
+  const handleMapClick = async (event: mapboxgl.MapMouseEvent) => {
     const { lng, lat } = event.lngLat;
     setNewPin({ longitude: lng, latitude: lat });
+
+    try {
+      const response = await fetch(
+        `http://localhost:3002/api/reverse-geocode?longitude=${lng}&latitude=${lat}`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        // 更新地址搜索框的文本
+        setAddressQuery(data.place_name);
+      } else {
+        setAddressQuery("Address not found");
+      }
+    } catch (error) {
+      console.error("Reverse geocoding failed", error);
+      setAddressQuery("Could not fetch address");
+    }
   };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -124,7 +142,11 @@ export default function AddCampgroundPage() {
             </div>
             <div className="grid gap-2">
               <Label>Address</Label>
-              <AddressSearch onSelect={handleAddressSelect} />
+              <AddressSearch
+                query={addressQuery}
+                setQuery={setAddressQuery}
+                onSelect={handleAddressSelect}
+              />
             </div>
 
             {/* 交互式地图 */}
@@ -138,19 +160,14 @@ export default function AddCampgroundPage() {
                   zoom: 3,
                 }}
                 mapStyle="mapbox://styles/mapbox/streets-v12"
-                onClick={(e) =>
-                  handleAddressSelect({
-                    longitude: e.lngLat.lng,
-                    latitude: e.lngLat.lat,
-                  })
-                }
+                onClick={handleMapClick} // 现在这个函数会调用 API
               >
                 {newPin && (
                   <Marker
                     longitude={newPin.longitude}
                     latitude={newPin.latitude}
                   >
-                    <Compass className="h-8 w-8 text-red-600" />
+                    <MapPin className="h-8 w-8 text-blue-800 fill-blue-500" />
                   </Marker>
                 )}
               </Map>
