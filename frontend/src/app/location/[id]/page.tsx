@@ -5,9 +5,12 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Map, { Marker } from "react-map-gl/mapbox";
-import { MapPin, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeepBlueMapPin } from "@/components/icons/MapPin";
+import { ReviewForm } from "@/components/components/ReviewForm";
+import { useAuth } from "@/app/context/AuthContext";
+import Link from "next/link";
 
 // Define the types for the data we expect from our API
 interface Review {
@@ -32,6 +35,7 @@ interface LocationDetail {
 export default function LocationDetailPage() {
   const params = useParams();
   const id = params.id as string;
+  const { user } = useAuth();
 
   const [location, setLocation] = useState<LocationDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,27 +43,24 @@ export default function LocationDetailPage() {
 
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
+  async function fetchLocationDetail() {
+    try {
+      setLoading(true);
+      const response = await fetch(`http://localhost:3002/api/locations/${id}`);
+      if (!response.ok) {
+        throw new Error("Location not found");
+      }
+      const data: LocationDetail = await response.json();
+      setLocation(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (!id) return;
-
-    async function fetchLocationDetail() {
-      try {
-        setLoading(true);
-        const response = await fetch(
-          `http://localhost:3002/api/locations/${id}`
-        );
-        if (!response.ok) {
-          throw new Error("Location not found");
-        }
-        const data: LocationDetail = await response.json();
-        setLocation(data);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     fetchLocationDetail();
   }, [id]);
 
@@ -145,6 +146,39 @@ export default function LocationDetailPage() {
               )}
             </CardContent>
           </Card>
+        </div>
+
+        <div className="md:col-span-2">
+          {" "}
+          {/* Added to make layout work */}
+          {user ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Write a Review</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ReviewForm
+                  locationId={location.id}
+                  onReviewSubmit={fetchLocationDetail}
+                />
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="bg-gray-50">
+              <CardHeader>
+                <CardTitle>Write a Review</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  You must be{" "}
+                  <Link href="/login" className="underline font-semibold">
+                    logged in
+                  </Link>{" "}
+                  to write a review.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

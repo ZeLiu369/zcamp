@@ -6,6 +6,7 @@ dotenv.config();
 import locationRoutes from './locationRoutes'; 
 import authRoutes from './authRoutes';
 import apiRoutes from './apiRoutes';
+import reviewsRoutes from './reviewsRoutes';
 
 const app = express();
 const port = 3002;
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use('/api', locationRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api', apiRoutes);
+app.use('/api/reviews', reviewsRoutes);
 
 // --- Server Startup ---
 app.listen(port, () => {
