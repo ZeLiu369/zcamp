@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Map, { Marker } from "react-map-gl/mapbox";
 import { Star, Trash2, Pencil } from "lucide-react";
@@ -35,6 +35,7 @@ interface Review {
 interface LocationDetail {
   id: string;
   name: string;
+  created_by_user_id: string | null;
   osm_tags: any;
   coordinates: {
     type: "Point";
@@ -58,6 +59,13 @@ export default function LocationDetailPage() {
   const [editedComment, setEditedComment] = useState("");
 
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!id) return;
+    fetchLocationDetail();
+  }, [id]);
 
   async function fetchLocationDetail() {
     try {
@@ -146,10 +154,37 @@ export default function LocationDetailPage() {
     }
   };
 
-  useEffect(() => {
-    if (!id) return;
-    fetchLocationDetail();
-  }, [id]);
+  const handleDeleteLocation = async () => {
+    if (!token) {
+      alert("You must be logged in.");
+      return;
+    }
+
+    if (
+      confirm(
+        "Are you sure you want to permanently delete this campground and all of its reviews?"
+      )
+    ) {
+      try {
+        const response = await fetch(
+          `http://localhost:3002/api/locations/${location?.id}`,
+          {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        const data = await response.json();
+        if (!response.ok)
+          throw new Error(data.error || "Failed to delete location.");
+
+        alert("Campground deleted successfully.");
+        router.push("/explore"); // Redirect to explore page after deletion
+      } catch (err: any) {
+        alert(`Error: ${err.message}`);
+      }
+    }
+  };
 
   if (loading) {
     return <div className="text-center p-10">Loading...</div>;
@@ -164,10 +199,19 @@ export default function LocationDetailPage() {
   }
 
   const [longitude, latitude] = location.coordinates.coordinates;
+  const isCreator = user && user.id === location.created_by_user_id;
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-4">{location.name}</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-4xl font-bold">{location.name}</h1>
+        {/* THE KEY CHANGE: Conditionally render the Delete button */}
+        {isCreator && (
+          <Button variant="destructive" onClick={handleDeleteLocation}>
+            <Trash2 className="mr-2 h-4 w-4" /> Delete Campground
+          </Button>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* --- 左侧主内容区 (2/3 宽度) --- */}

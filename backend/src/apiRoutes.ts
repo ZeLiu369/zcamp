@@ -3,6 +3,7 @@
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
 import { Pool } from 'pg';
+import { authMiddleware, AuthRequest } from './middleware';
 
 const pool = new Pool({
     user: 'postgres',      
@@ -88,7 +89,7 @@ apiRoutes.get('/reverse-geocode', async (req: Request, res: Response): Promise<a
 });
 
 
-// 新增：获取单个露营地及其评论的终点
+// 获取单个露营地及其评论的终点
 // GET /api/locations/:id
 apiRoutes.get('/locations/:id', async (req: Request, res: Response): Promise<any> => {
     const { id } = req.params; // 从 URL 中获取 ID
@@ -106,6 +107,7 @@ apiRoutes.get('/locations/:id', async (req: Request, res: Response): Promise<any
             l.id,
             l.name,
             l.osm_tags,
+            l.created_by_user_id,
             ST_AsGeoJSON(l.coordinates) as coordinates,
             COALESCE(
               json_agg(
@@ -152,5 +154,57 @@ apiRoutes.get('/locations/:id', async (req: Request, res: Response): Promise<any
       res.status(500).json({ error: 'Internal server error' });
     }
   });
+
+  apiRoutes.delete('/locations/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<any> => {
+    const { id: locationId } = req.params; // The ID of the location to delete
+    const userId = req.user?.id;           // The ID of the user making the request
+
+    if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated.' });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // First, find the location to verify it exists and get its creator's ID
+        const locationResult = await client.query(
+            'SELECT created_by_user_id FROM locations WHERE id = $1', 
+            [locationId]
+        );
+        
+        if (locationResult.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Location not found.' });
+        }
+
+        const creatorId = locationResult.rows[0].created_by_user_id;
+
+        // SECURITY CHECK: Ensure the person deleting is the person who created it
+        if (creatorId !== userId) {
+            await client.query('ROLLBACK');
+            return res.status(403).json({ error: 'Forbidden: You are not authorized to delete this campground.' });
+        }
+        
+        // Also check that it's a user-generated location, not an OSM import
+        // (though the creatorId check mostly handles this)
+        
+        // If the checks pass, delete the location.
+        // The `ON DELETE CASCADE` rule in our database will automatically delete all associated reviews.
+        await client.query('DELETE FROM locations WHERE id = $1', [locationId]);
+
+        await client.query('COMMIT');
+
+        res.status(200).json({ message: 'Campground deleted successfully.' });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error deleting location:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+});
+
 
 export default apiRoutes;
