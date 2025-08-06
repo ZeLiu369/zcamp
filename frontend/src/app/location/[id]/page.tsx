@@ -5,13 +5,22 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Map, { Marker } from "react-map-gl/mapbox";
-import { Star, Trash2 } from "lucide-react";
+import { Star, Trash2, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeepBlueMapPin } from "@/components/icons/MapPin";
 import { ReviewForm } from "@/components/components/ReviewForm";
 import { useAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 // Define the types for the data we expect from our API
 interface Review {
@@ -42,6 +51,11 @@ export default function LocationDetailPage() {
   const [location, setLocation] = useState<LocationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [editedRating, setEditedRating] = useState(0);
+  const [editedComment, setEditedComment] = useState("");
 
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
@@ -94,6 +108,43 @@ export default function LocationDetailPage() {
       }
     }
   };
+  const handleOpenEditDialog = (review: Review) => {
+    setEditingReview(review);
+    setEditedRating(review.rating);
+    setEditedComment(review.comment || "");
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateReview = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!token || !editingReview) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:3002/api/reviews/${editingReview.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            rating: editedRating,
+            comment: editedComment,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to update review.");
+
+      setIsEditDialogOpen(false);
+      fetchLocationDetail(); // Refresh data
+    } catch (err: any) {
+      alert(`Error: ${err.message}`);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -119,7 +170,9 @@ export default function LocationDetailPage() {
       <h1 className="text-4xl font-bold mb-4">{location.name}</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2">
+        {/* --- 左侧主内容区 (2/3 宽度) --- */}
+        <div className="md:col-span-2 space-y-8">
+          {/* 地图卡片 */}
           <Card>
             <CardHeader>
               <CardTitle>Location Map</CardTitle>
@@ -130,7 +183,7 @@ export default function LocationDetailPage() {
                   mapboxAccessToken={mapboxToken}
                   initialViewState={{ longitude, latitude, zoom: 13 }}
                   mapStyle="mapbox://styles/mapbox/streets-v12"
-                  scrollZoom={false} // Disable scroll zoom on the small map
+                  scrollZoom={false}
                 >
                   <Marker
                     longitude={longitude}
@@ -143,64 +196,8 @@ export default function LocationDetailPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        <div className="md:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Reviews</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {location.reviews.length > 0 ? (
-                <ul className="space-y-4">
-                  {location.reviews.map((review) => (
-                    <li
-                      key={review.id}
-                      className="border-b last:border-b-0 pb-4"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold">{review.username}</p>
-                          <div className="flex items-center">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-4 w-4 ${
-                                  i < review.rating
-                                    ? "text-yellow-400 fill-yellow-400"
-                                    : "text-gray-300"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        {/* THE KEY CHANGE: Conditionally render the Delete button */}
-                        {user && user.id === review.user_id && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteReview(review.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-600 mt-2">
-                        {review.comment}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-500">No reviews yet.</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="md:col-span-2">
-          {" "}
-          {/* Added to make layout work */}
+          {/* "写评论" 卡片 (现在移到了左侧) */}
           {user ? (
             <Card>
               <CardHeader>
@@ -230,7 +227,114 @@ export default function LocationDetailPage() {
             </Card>
           )}
         </div>
+
+        {/* --- 右侧评论区 (1/3 宽度) --- */}
+        <div className="md:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle>Reviews</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {location.reviews.length > 0 ? (
+                <ul className="space-y-4">
+                  {location.reviews.map((review) => (
+                    <li
+                      key={review.id}
+                      className="border-b last:border-b-0 pb-4"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold">{review.username}</p>
+                          <div className="flex items-center">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-4 w-4 ${
+                                  i < review.rating
+                                    ? "text-yellow-400 fill-yellow-400"
+                                    : "text-gray-300"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        {user && user.id === review.user_id && (
+                          <div className="flex items-center">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenEditDialog(review)}
+                            >
+                              <Pencil className="h-4 w-4 text-blue-500" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteReview(review.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 mt-2">
+                        {review.comment}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-500">No reviews yet.</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
+
+      {/* 编辑评论的弹窗 (Dialog) - 放在主布局的末尾通常更清晰 */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Your Review</DialogTitle>
+            <DialogDescription>
+              Make changes to your rating and comment below. Click save when
+              you&apos;re done.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdateReview} className="space-y-4 py-4">
+            <div>
+              <label className="font-semibold">Your Rating</label>
+              <div className="flex items-center gap-1 mt-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`h-6 w-6 cursor-pointer transition-colors ${
+                      editedRating >= star
+                        ? "text-yellow-400 fill-yellow-400"
+                        : "text-gray-300"
+                    }`}
+                    onClick={() => setEditedRating(star)}
+                  />
+                ))}
+              </div>
+            </div>
+            <div>
+              <label htmlFor="editedComment" className="font-semibold">
+                Your Review
+              </label>
+              <Textarea
+                id="editedComment"
+                value={editedComment}
+                onChange={(e) => setEditedComment(e.target.value)}
+                className="mt-2"
+              />
+            </div>
+            <DialogFooter>
+              <Button type="submit">Save Changes</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

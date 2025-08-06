@@ -93,4 +93,56 @@ reviewRoutes.delete('/:id', authMiddleware, async (req: AuthRequest, res: Respon
     }
 });
 
+
+reviewRoutes.put('/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<any> => {
+    const { id: reviewId } = req.params;      // The ID of the review to edit
+    const { rating, comment } = req.body;   // The new data from the form
+    const userId = req.user?.id;              // The ID of the user making the request
+
+    if (!rating) {
+        return res.status(400).json({ error: 'Rating is required.' });
+    }
+    if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated.' });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // First, find the review to ensure it exists and was written by this user
+        const reviewResult = await client.query('SELECT user_id FROM reviews WHERE id = $1', [reviewId]);
+        if (reviewResult.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Review not found.' });
+        }
+
+        // SECURITY CHECK: Ensure the person editing is the original author
+        if (reviewResult.rows[0].user_id !== userId) {
+            await client.query('ROLLBACK');
+            return res.status(403).json({ error: 'Forbidden: You are not authorized to edit this review.' });
+        }
+
+        // If the check passes, update the review with the new data
+        const updateQuery = `
+            UPDATE reviews 
+            SET rating = $1, comment = $2, updated_at = NOW() 
+            WHERE id = $3 
+            RETURNING *;
+        `;
+        const result = await client.query(updateQuery, [rating, comment, reviewId]);
+
+        await client.query('COMMIT');
+
+        res.status(200).json(result.rows[0]);
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error updating review:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+});
+
 export default reviewRoutes;
