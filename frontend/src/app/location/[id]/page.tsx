@@ -5,12 +5,13 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Map, { Marker } from "react-map-gl/mapbox";
-import { Star } from "lucide-react";
+import { Star, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeepBlueMapPin } from "@/components/icons/MapPin";
 import { ReviewForm } from "@/components/components/ReviewForm";
 import { useAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 // Define the types for the data we expect from our API
 interface Review {
@@ -19,6 +20,7 @@ interface Review {
   comment: string;
   created_at: string;
   username: string;
+  user_id: string;
 }
 
 interface LocationDetail {
@@ -35,7 +37,7 @@ interface LocationDetail {
 export default function LocationDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   const [location, setLocation] = useState<LocationDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -58,6 +60,40 @@ export default function LocationDetailPage() {
       setLoading(false);
     }
   }
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!token) {
+      alert("You must be logged in to delete a review.");
+      return;
+    }
+
+    if (
+      confirm(
+        "Are you sure you want to delete this review? It cannot be recovered! "
+      )
+    ) {
+      try {
+        const response = await fetch(
+          `http://localhost:3002/api/reviews/${reviewId}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+        if (!response.ok)
+          throw new Error(data.error || "Failed to delete review.");
+
+        // Refresh the location data to show the updated review list
+        fetchLocationDetail();
+      } catch (err: any) {
+        alert(`Error: ${err.message}`);
+      }
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -116,33 +152,47 @@ export default function LocationDetailPage() {
             </CardHeader>
             <CardContent>
               {location.reviews.length > 0 ? (
-                <ul>
+                <ul className="space-y-4">
                   {location.reviews.map((review) => (
                     <li
                       key={review.id}
-                      className="border-b last:border-b-0 py-2"
+                      className="border-b last:border-b-0 pb-4"
                     >
-                      <p className="font-semibold">{review.username}</p>
-                      <p className="text-sm text-gray-600">{review.comment}</p>
-                      <div className="flex items-center">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-4 w-4 ${
-                              i < review.rating
-                                ? "text-yellow-400 fill-yellow-400"
-                                : "text-gray-300"
-                            }`}
-                          />
-                        ))}
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold">{review.username}</p>
+                          <div className="flex items-center">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-4 w-4 ${
+                                  i < review.rating
+                                    ? "text-yellow-400 fill-yellow-400"
+                                    : "text-gray-300"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        {/* THE KEY CHANGE: Conditionally render the Delete button */}
+                        {user && user.id === review.user_id && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteReview(review.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        )}
                       </div>
+                      <p className="text-sm text-gray-600 mt-2">
+                        {review.comment}
+                      </p>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-gray-500">
-                  No reviews yet. Be the first to write one!
-                </p>
+                <p className="text-gray-500">No reviews yet.</p>
               )}
             </CardContent>
           </Card>

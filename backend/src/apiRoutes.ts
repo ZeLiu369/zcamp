@@ -114,7 +114,8 @@ apiRoutes.get('/locations/:id', async (req: Request, res: Response): Promise<any
                   'rating', r.rating,
                   'comment', r.comment,
                   'created_at', r.created_at,
-                  'username', u.username
+                  'username', u.username,
+                  'user_id', u.id 
                 )
               ) FILTER (WHERE r.id IS NOT NULL),
               '[]'
