@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { useState, FormEvent, useEffect, useRef } from "react";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Map, { Marker, MapRef } from "react-map-gl/mapbox";
-import { MapPin } from "lucide-react";
+import { DeepBlueMapPin } from "@/components/icons/MapPin";
 import { AddressSearch } from "@/components/components/AddressSearch";
 
 interface NewPin {
@@ -164,7 +164,7 @@ export default function AddCampgroundPage() {
                     longitude={newPin.longitude}
                     latitude={newPin.latitude}
                   >
-                    <MapPin className="h-8 w-8 text-blue-800 fill-blue-500" />
+                    <DeepBlueMapPin className="h-10 w-10 hover:scale-110 transition-transform cursor-pointer drop-shadow-md" />
                   </Marker>
                 )}
               </Map>

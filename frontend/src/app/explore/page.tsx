@@ -8,6 +8,7 @@ import Map, {
 } from "react-map-gl/mapbox";
 import { useEffect, useState, useMemo, useRef } from "react";
 import useSupercluster from "use-supercluster";
+import { useRouter } from "next/navigation";
 
 // Define a type for our location data for TypeScript safety
 type Location = {
@@ -49,6 +50,7 @@ function getClusterSizeClasses(pointCount: number): string {
 
 export default function ExplorePage() {
   const mapRef = useRef<MapRef>(null);
+  const router = useRouter();
 
   const [locations, setLocations] = useState<Location[]>([]);
   const [bounds, setBounds] = useState<
@@ -123,8 +125,8 @@ export default function ExplorePage() {
     return (
       <div className="flex items-center justify-center h-full">
         <p className="text-red-500 font-bold">
-          Error: Mapbox access token is not configured. Please check your
-          .env file.
+          Error: Mapbox access token is not configured. Please check your .env
+          file.
         </p>
       </div>
     );
@@ -204,7 +206,12 @@ export default function ExplorePage() {
                   latitude={latitude}
                   longitude={longitude}
                 >
-                  <div className="h-4 w-4 bg-blue-500 rounded-full border-2 border-white shadow-md cursor-pointer" />
+                  <div
+                    className="h-4 w-4 bg-blue-500 rounded-full border-2 border-white shadow-md cursor-pointer"
+                    onClick={() =>
+                      router.push(`/location/${cluster.properties.locationId}`)
+                    }
+                  />
                 </Marker>
               );
             })}

@@ -7,6 +7,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import Map, { Marker } from "react-map-gl/mapbox";
 import { MapPin, Star } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DeepBlueMapPin } from "@/components/icons/MapPin";
 
 // Define the types for the data we expect from our API
 interface Review {
@@ -94,8 +95,12 @@ export default function LocationDetailPage() {
                   mapStyle="mapbox://styles/mapbox/streets-v12"
                   scrollZoom={false} // Disable scroll zoom on the small map
                 >
-                  <Marker longitude={longitude} latitude={latitude}>
-                    <MapPin className="h-8 w-8 text-blue-800 fill-blue-500" />
+                  <Marker
+                    longitude={longitude}
+                    latitude={latitude}
+                    anchor="bottom"
+                  >
+                    <DeepBlueMapPin className="h-10 w-10 hover:scale-110 transition-transform cursor-pointer drop-shadow-md" />
                   </Marker>
                 </Map>
               </div>
