@@ -204,6 +204,116 @@ apiRoutes.get('/locations/:id', async (req: Request, res: Response): Promise<any
     } finally {
         client.release();
     }
+
+
+    apiRoutes.put('/locations/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<any> => {
+      const { id: locationId } = req.params;
+      const { name, latitude, longitude } = req.body; // The new data from the edit form
+      const userId = req.user?.id;
+  
+      if (!name || latitude === undefined || longitude === undefined) {
+          return res.status(400).json({ error: 'Name and coordinates are required.' });
+      }
+      if (!userId) {
+          return res.status(401).json({ error: 'User not authenticated.' });
+      }
+  
+      const client = await pool.connect();
+      try {
+          await client.query('BEGIN');
+  
+          // First, find the location to verify its creator
+          const locationResult = await client.query(
+              'SELECT created_by_user_id FROM locations WHERE id = $1',
+              [locationId]
+          );
+  
+          if (locationResult.rows.length === 0) {
+              await client.query('ROLLBACK');
+              return res.status(404).json({ error: 'Location not found.' });
+          }
+  
+          // SECURITY CHECK: Ensure the user editing is the user who created it
+          if (locationResult.rows[0].created_by_user_id !== userId) {
+              await client.query('ROLLBACK');
+              return res.status(403).json({ error: 'Forbidden: You are not authorized to edit this campground.' });
+          }
+  
+          // If the check passes, update the location
+          const updateQuery = `
+              UPDATE locations 
+              SET name = $1, coordinates = ST_SetSRID(ST_MakePoint($2, $3), 4326), updated_at = NOW()
+              WHERE id = $4
+              RETURNING *;
+          `;
+          const result = await client.query(updateQuery, [name, longitude, latitude, locationId]);
+  
+          await client.query('COMMIT');
+          res.status(200).json(result.rows[0]);
+  
+      } catch (error) {
+          await client.query('ROLLBACK');
+          console.error('Error updating location:', error);
+          res.status(500).json({ error: 'Internal server error' });
+      } finally {
+          client.release();
+      }
+  });
+
+
+  apiRoutes.put('/locations/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<any> => {
+    const { id: locationId } = req.params;
+    const { name, latitude, longitude } = req.body; // The new data from the edit form
+    const userId = req.user?.id;
+
+    if (!name || latitude === undefined || longitude === undefined) {
+        return res.status(400).json({ error: 'Name and coordinates are required.' });
+    }
+    if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated.' });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // First, find the location to verify its creator
+        const locationResult = await client.query(
+            'SELECT created_by_user_id FROM locations WHERE id = $1',
+            [locationId]
+        );
+
+        if (locationResult.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Location not found.' });
+        }
+
+        // SECURITY CHECK: Ensure the user editing is the user who created it
+        if (locationResult.rows[0].created_by_user_id !== userId) {
+            await client.query('ROLLBACK');
+            return res.status(403).json({ error: 'Forbidden: You are not authorized to edit this campground.' });
+        }
+
+        // If the check passes, update the location
+        const updateQuery = `
+            UPDATE locations 
+            SET name = $1, coordinates = ST_SetSRID(ST_MakePoint($2, $3), 4326), updated_at = NOW()
+            WHERE id = $4
+            RETURNING *;
+        `;
+        const result = await client.query(updateQuery, [name, longitude, latitude, locationId]);
+
+        await client.query('COMMIT');
+        res.status(200).json(result.rows[0]);
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error updating location:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+})
 });
 
 

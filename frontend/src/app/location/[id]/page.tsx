@@ -162,7 +162,7 @@ export default function LocationDetailPage() {
 
     if (
       confirm(
-        "Are you sure you want to permanently delete this campground and all of its reviews?"
+        "Are you sure you want to permanently delete this campground and all of its reviews? This action cannot be undone!"
       )
     ) {
       try {
@@ -207,9 +207,16 @@ export default function LocationDetailPage() {
         <h1 className="text-4xl font-bold">{location.name}</h1>
         {/* THE KEY CHANGE: Conditionally render the Delete button */}
         {isCreator && (
-          <Button variant="destructive" onClick={handleDeleteLocation}>
-            <Trash2 className="mr-2 h-4 w-4" /> Delete Campground
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild>
+              <Link href={`/location/${location.id}/edit`}>
+                <Pencil className="mr-2 h-4 w-4" /> Edit
+              </Link>
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteLocation}>
+              <Trash2 className="mr-2 h-4 w-4" /> Delete
+            </Button>
+          </div>
         )}
       </div>
 

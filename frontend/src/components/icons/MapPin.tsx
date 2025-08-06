@@ -14,7 +14,7 @@ export function RedMapPin({ className }: { className?: string }) {
           cx="50%"
           cy="30%"
           r="75%"
-          gradientTransform="translate(0,-10%)"
+          gradientTransform="translate(0,-0.1)"
         >
           <stop offset="0%" stopColor="#FF5A5F" />
           <stop offset="100%" stopColor="#D82C2E" />
@@ -42,7 +42,7 @@ export function GreenMapPin({ className }: { className?: string }) {
           cx="50%"
           cy="30%"
           r="75%"
-          gradientTransform="translate(0,-10%)"
+          gradientTransform="translate(0, -0.1)"
         >
           <stop offset="0%" stopColor="#00A699" />
           <stop offset="100%" stopColor="#007C66" />
@@ -70,7 +70,7 @@ export function SkyblueMapPin({ className }: { className?: string }) {
           cx="50%"
           cy="30%"
           r="75%"
-          gradientTransform="translate(0, -10%)"
+          gradientTransform="translate(0, -0.1)"
         >
           <stop offset="0%" stopColor="#87CEEB" />
           <stop offset="100%" stopColor="#00BFFF" />
@@ -98,10 +98,10 @@ export function DeepBlueMapPin({ className }: { className?: string }) {
           cx="50%"
           cy="30%"
           r="75%"
-          gradientTransform="translate(0, -10%)"
+          gradientTransform="translate(0, -0.1)"
         >
-          <stop offset="0%" stopColor="#00008B" /> {/* 深午夜蓝 */}
-          <stop offset="100%" stopColor="#0000CD" /> {/* 经典蓝 */}
+          <stop offset="0%" stopColor="#00008B" />
+          <stop offset="100%" stopColor="#0000CD" />
         </radialGradient>
       </defs>
       <path
