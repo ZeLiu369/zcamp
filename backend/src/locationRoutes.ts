@@ -4,8 +4,8 @@ import { authMiddleware, AuthRequest } from './middleware';
 
 // Database connection configuration
 const pool = new Pool({
-    user: 'postgres',      // <-- PUT YOUR USERNAME HERE
-    password: 'postgres',  // <-- PUT YOUR PASSWORD HERE
+    user: 'postgres',      
+    password: 'postgres',  
     host: 'localhost',
     port: 5432,
     database: 'nationparkyelp',

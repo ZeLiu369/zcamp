@@ -7,6 +7,7 @@ import locationRoutes from './locationRoutes';
 import authRoutes from './authRoutes';
 import apiRoutes from './apiRoutes';
 import reviewsRoutes from './reviewsRoutes';
+import profileRoutes from './profileRoutes';
 
 const app = express();
 const port = 3002;
@@ -24,6 +25,7 @@ app.use('/api', locationRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api', apiRoutes);
 app.use('/api/reviews', reviewsRoutes);
+app.use('/api/profile', profileRoutes);
 
 // --- Server Startup ---
 app.listen(port, () => {

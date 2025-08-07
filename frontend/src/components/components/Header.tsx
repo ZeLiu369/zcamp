@@ -50,11 +50,14 @@ export function Header() {
         </Link>
         {isLoading ? (
           <div className="h-8 w-20 bg-gray-200 rounded-md animate-pulse"></div>
-        ) : user ? (
+        ) : user ? ( // NOSONAR
           <>
-            <span className="text-sm font-medium">
-              Welcome, {user.username}!
-            </span>
+            <Link
+              href="/profile"
+              className="text-sm font-medium hover:underline underline-offset-4"
+            >
+              My Profile
+            </Link>
             <Button variant="outline" size="sm" onClick={logout}>
               Logout
             </Button>
@@ -116,11 +119,14 @@ export function Header() {
             </Link>
             {isLoading ? (
               <div className="h-8 w-20 bg-gray-200 rounded-md animate-pulse"></div>
-            ) : user ? (
+            ) : user ? ( // NOSONAR
               <>
-                <span className="text-sm font-medium">
-                  Welcome, {user.username}!
-                </span>
+                <Link
+                  href="/profile"
+                  className="text-sm font-medium hover:underline underline-offset-4"
+                >
+                  My Profile
+                </Link>
                 <Button variant="outline" size="sm" onClick={logout}>
                   Logout
                 </Button>
