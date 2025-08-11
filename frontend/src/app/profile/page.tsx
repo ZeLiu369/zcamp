@@ -28,7 +28,7 @@ interface ProfileData {
 }
 
 export default function ProfilePage() {
-  const { user, token, isLoading: isAuthLoading } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,11 +41,11 @@ export default function ProfilePage() {
   }, [isAuthLoading, user, router]);
 
   useEffect(() => {
-    if (token) {
+    if (user) {
       async function fetchProfile() {
         try {
           const response = await fetch("http://localhost:3002/api/profile/me", {
-            headers: { Authorization: `Bearer ${token}` },
+            credentials: "include",
           });
           if (!response.ok) throw new Error("Failed to fetch profile.");
           const data = await response.json();
@@ -58,7 +58,7 @@ export default function ProfilePage() {
       }
       fetchProfile();
     }
-  }, [token]);
+  }, [user]);
 
   if (isAuthLoading || loading) {
     return <div className="text-center p-10">Loading profile...</div>;

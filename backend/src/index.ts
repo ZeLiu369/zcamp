@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -9,13 +10,18 @@ import apiRoutes from './apiRoutes';
 import reviewsRoutes from './reviewsRoutes';
 import profileRoutes from './profileRoutes';
 
-const app = express();
-const port = 3002;
 
+const app = express();
+const port = process.env.PORT || 3002;
 // --- Middlewares ---
 // Enable Cross-Origin Resource Sharing so your frontend can call the backend
-app.use(cors()); 
+app.use(cors({
+  origin: 'http://localhost:3000', // The origin of your frontend app
+  credentials: true,
+}));
 
+
+app.use(cookieParser()); 
 // Middleware to parse JSON bodies (though we don't need it for GET requests, it's good practice)
 app.use(express.json());
 

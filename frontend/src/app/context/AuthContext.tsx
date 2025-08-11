@@ -6,75 +6,101 @@ import {
   useState,
   useEffect,
   ReactNode,
+  useCallback,
 } from "react";
-import { jwtDecode } from "jwt-decode"; // We need a library to decode the token
 
-// Define the shape of the user object we get from the JWT
+// The User interface remains the same
 interface User {
   id: string;
   username: string;
 }
 
-// Define the shape of the context value
+// The context type changes: we no longer manage the token directly
 interface AuthContextType {
   user: User | null;
-  token: string | null;
-  login: (token: string) => void;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<void>; // Login now performs the API call
+  logout: () => Promise<void>; // Logout now performs an API call
   isLoading: boolean;
 }
 
-// Create the context with a default value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Create the AuthProvider component
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // To handle initial load
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // On initial load, check if a token exists in localStorage
-    const storedToken = localStorage.getItem("authToken");
-    if (storedToken) {
-      try {
-        const decoded = jwtDecode<{ user: User }>(storedToken); // Decode the token payload, the payload expected to have a property that key is "user", value type is "User" (if not, it will throw an error during runtime)
-        console.log("Decoded token:", decoded);
-        setUser(decoded.user);
-        setToken(storedToken);
-      } catch (error) {
-        console.error("Invalid token found, removing.", error);
-        localStorage.removeItem("authToken");
+  // This function checks with the backend to see if we have a valid session cookie
+  // if user has loggin, get user information, name and id
+  // if user has not logged in or  cookie is not valid, set user to null
+  // check the auth status with the backend server and get user information to display on frontend
+  // get called when the user is logged in or first render (come back)
+  const checkAuthStatus = useCallback(async () => {
+    try {
+      // Get all information about the user, campgrounds, and reviews, username...
+      const response = await fetch("http://localhost:3002/api/profile/me", {
+        credentials: "include", // IMPORTANT: This tells fetch to send cookies
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser({ id: data.id, username: data.username });
+      } else {
+        setUser(null);
       }
+    } catch (error) {
+      console.error("Could not verify auth status", error);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false); // Finished loading
   }, []);
 
-  const login = (newToken: string) => {
+  // On initial load, check the user's auth status
+  useEffect(() => {
+    console.log("checkAuthStatus is rendering...");
+    checkAuthStatus();
+  }, [checkAuthStatus]);
+
+  const login = async (email: string, password: string): Promise<void> => {
     try {
-      const decoded = jwtDecode<{ user: User }>(newToken);
-      console.log("New Decoded token:", decoded);
-      localStorage.setItem("authToken", newToken);
-      setUser(decoded.user);
-      setToken(newToken);
+      const response = await fetch("http://localhost:3002/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+        credentials: "include", // IMPORTANT: Needed for the backend to set the cookie
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Login failed");
+      }
+
+      // After successful login, check the auth status again to get user data
+      await checkAuthStatus();
     } catch (error) {
-      console.error("Failed to decode token on login", error);
+      console.error("An error occurred during the login api call:", error);
+      // Re-throw the error so the login page can display it
+      throw error;
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("authToken");
-    setUser(null);
-    setToken(null);
+  const logout = async () => {
+    try {
+      await fetch("http://localhost:3002/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      setUser(null);
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
   };
 
-  const value = { user, token, login, logout, isLoading };
+  const value = { user, login, logout, isLoading };
 
-  // value is context, shared data
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Create a custom hook to easily use the context
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

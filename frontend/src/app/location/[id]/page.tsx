@@ -1,7 +1,7 @@
 // In frontend/src/app/location/[id]/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Map, { Marker } from "react-map-gl/mapbox";
@@ -47,7 +47,7 @@ interface LocationDetail {
 export default function LocationDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const { user, token } = useAuth();
+  const { user } = useAuth();
 
   const [location, setLocation] = useState<LocationDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,7 +84,7 @@ export default function LocationDetailPage() {
   }
 
   const handleDeleteReview = async (reviewId: string) => {
-    if (!token) {
+    if (!user) {
       alert("You must be logged in to delete a review.");
       return;
     }
@@ -99,9 +99,7 @@ export default function LocationDetailPage() {
           `http://localhost:3002/api/reviews/${reviewId}`,
           {
             method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            credentials: "include",
           }
         );
 
@@ -125,7 +123,7 @@ export default function LocationDetailPage() {
 
   const handleUpdateReview = async (event: FormEvent) => {
     event.preventDefault();
-    if (!token || !editingReview) return;
+    if (!user || !editingReview) return;
 
     try {
       const response = await fetch(
@@ -134,12 +132,12 @@ export default function LocationDetailPage() {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             rating: editedRating,
             comment: editedComment,
           }),
+          credentials: "include",
         }
       );
 
@@ -155,7 +153,7 @@ export default function LocationDetailPage() {
   };
 
   const handleDeleteLocation = async () => {
-    if (!token) {
+    if (!user) {
       alert("You must be logged in.");
       return;
     }
@@ -170,7 +168,7 @@ export default function LocationDetailPage() {
           `http://localhost:3002/api/locations/${location?.id}`,
           {
             method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
+            credentials: "include",
           }
         );
 

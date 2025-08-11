@@ -30,7 +30,7 @@ export default function EditCampgroundPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const { user, token, isLoading: isAuthLoading } = useAuth();
+  const { user } = useAuth();
 
   const [name, setName] = useState("");
   const [pin, setPin] = useState<{
@@ -99,13 +99,13 @@ export default function EditCampgroundPage() {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             name,
             latitude: pin.latitude,
             longitude: pin.longitude,
           }),
+          credentials: "include",
         }
       );
       const data = await response.json();

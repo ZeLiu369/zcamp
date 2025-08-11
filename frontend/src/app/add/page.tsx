@@ -32,7 +32,7 @@ export default function AddCampgroundPage() {
 
   const [addressQuery, setAddressQuery] = useState("");
 
-  const { user, token, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
   const mapRef = useRef<MapRef>(null);
@@ -62,7 +62,7 @@ export default function AddCampgroundPage() {
       );
       const data = await response.json();
       if (response.ok) {
-        // 更新地址搜索框的文本
+        // update the address search box text
         setAddressQuery(data.place_name);
       } else {
         setAddressQuery("Address not found");
@@ -78,7 +78,7 @@ export default function AddCampgroundPage() {
     setError(null);
     setSuccess(null);
 
-    // 检查用户是否已在地图上放置图钉
+    // check if the user has selected a location on the map
     if (!newPin) {
       setError("Please select a location on the map.");
       return;
@@ -89,14 +89,13 @@ export default function AddCampgroundPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
-        // 使用从地图状态中获取的经纬度
         body: JSON.stringify({
           name,
           latitude: newPin.latitude,
           longitude: newPin.longitude,
         }),
+        credentials: "include",
       });
 
       const data = await response.json();

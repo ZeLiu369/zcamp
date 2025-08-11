@@ -1,5 +1,4 @@
-// In frontend/src/app/login/page.tsx
-"use client"; // 表单需要客户端交互
+"use client";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,47 +16,23 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 
 export default function LoginPage() {
-  // 为表单字段和消息创建 state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { login } = useAuth();
 
-  // 处理表单提交的函数
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError(null);
 
     try {
-      // Step 1: Send the form data to your backend login endpoint
-      const response = await fetch("http://localhost:3002/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Login failed.");
-      }
-
-      // Step 2: On success, get the token from the response
-      const { token } = data;
-      if (token) {
-        // Step 3: Store the token in the browser's localStorage
-        login(token);
-        console.log("Login successful, token stored.");
-
-        // Step 4: Redirect the user to the homepage
-        router.push("/");
-      } else {
-        throw new Error("No token received from server.");
-      }
+      // Call the login function from the context
+      await login(email, password);
+      // On success, redirect to the homepage
+      router.push("/");
     } catch (err: any) {
+      // If login function throws an error, display it
       setError(err.message);
     }
   };

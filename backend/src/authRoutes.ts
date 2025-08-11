@@ -100,14 +100,20 @@ authRoutes.post('/login', async (req: Request, res: Response): Promise<any> => {
             jwt.sign(
                 payload,
                 process.env.JWT_SECRET as string,
-                { expiresIn: '7d' }, // Token expires in 1 hour
-                (err, token) => {
-                    if (err) throw err;
-                    // Step 5: Send the token back to the client
-                    res.status(200).json({ token });
+                { expiresIn: '7d' }, // Token expires in 7 days
+                    (err, token) => {
+                        if (err) throw err;
+                        // Set a secure, HttpOnly cookie
+                        res.cookie('authToken', token, {
+                        httpOnly: true, // Inaccessible to JavaScript
+                        secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
+                        sameSite: 'lax', // Helps mitigate CSRF attacks
+                        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
+                    });
+                // Send a success response without the token in the body
+                res.status(200).json({ message: 'Login successful' });
                 }
             );
-
         } finally {
             client.release();
         }
@@ -116,6 +122,16 @@ authRoutes.post('/login', async (req: Request, res: Response): Promise<any> => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+authRoutes.post('/logout', (req: Request, res: Response):void => {
+    // Clear the cookie by setting its expiration date to the past
+    res.cookie('authToken', '', {
+        httpOnly: true,
+        expires: new Date(0),
+    });
+    res.status(200).json({ message: 'Logout successful.' });
+});
+
 
 authRoutes.post('/forgot-password', async (req: Request, res: Response): Promise<any> => {
     const { email } = req.body;

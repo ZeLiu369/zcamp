@@ -1,5 +1,3 @@
-// In backend/src/apiRoutes.ts
-
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
 import { Pool } from 'pg';
@@ -53,9 +51,15 @@ apiRoutes.get('/geocode', async (req: Request, res: Response): Promise<any> => {
 
 apiRoutes.get('/reverse-geocode', async (req: Request, res: Response): Promise<any> => {
     const { longitude, latitude } = req.query;
+    const lon = Array.isArray(longitude) ? longitude[0] : longitude;
+    const lat = Array.isArray(latitude) ? latitude[0] : latitude;
 
-    if (!longitude || !latitude) {
+    if (!lon || !lat) {
         return res.status(400).json({ error: 'Longitude and latitude are required.' });
+    }
+
+    if (typeof lon !== 'string' || typeof lat !== 'string') {
+        return res.status(400).json({ error: 'Longitude and latitude must be strings.' });
     }
 
     const mapboxToken = process.env.MAPBOX_ACCESS_TOKEN;
@@ -64,7 +68,7 @@ apiRoutes.get('/reverse-geocode', async (req: Request, res: Response): Promise<a
     }
 
     // Mapbox 反向地理编码 API 的 URL
-    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json`;
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lon},${lat}.json`;
 
     try {
         const response = await axios.get(url, {
@@ -155,166 +159,102 @@ apiRoutes.get('/locations/:id', async (req: Request, res: Response): Promise<any
     }
   });
 
-  apiRoutes.delete('/locations/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<any> => {
-    const { id: locationId } = req.params; // The ID of the location to delete
-    const userId = req.user?.id;           // The ID of the user making the request
+  apiRoutes.delete('/locations/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+    const { id: locationId } = req.params;
+    const userId = req.user?.id;
 
     if (!userId) {
-        return res.status(401).json({ error: 'User not authenticated.' });
+      res.status(401).json({ error: 'User not authenticated.' });
+      return;
     }
 
     const client = await pool.connect();
     try {
-        await client.query('BEGIN');
+      await client.query('BEGIN');
 
-        // First, find the location to verify it exists and get its creator's ID
-        const locationResult = await client.query(
-            'SELECT created_by_user_id FROM locations WHERE id = $1', 
-            [locationId]
-        );
-        
-        if (locationResult.rows.length === 0) {
-            await client.query('ROLLBACK');
-            return res.status(404).json({ error: 'Location not found.' });
-        }
+      const locationResult = await client.query(
+        'SELECT created_by_user_id FROM locations WHERE id = $1',
+        [locationId]
+      );
 
-        const creatorId = locationResult.rows[0].created_by_user_id;
-
-        // SECURITY CHECK: Ensure the person deleting is the person who created it
-        if (creatorId !== userId) {
-            await client.query('ROLLBACK');
-            return res.status(403).json({ error: 'Forbidden: You are not authorized to delete this campground.' });
-        }
-        
-        // Also check that it's a user-generated location, not an OSM import
-        // (though the creatorId check mostly handles this)
-        
-        // If the checks pass, delete the location.
-        // The `ON DELETE CASCADE` rule in our database will automatically delete all associated reviews.
-        await client.query('DELETE FROM locations WHERE id = $1', [locationId]);
-
-        await client.query('COMMIT');
-
-        res.status(200).json({ message: 'Campground deleted successfully.' });
-
-    } catch (error) {
+      if (locationResult.rows.length === 0) {
         await client.query('ROLLBACK');
-        console.error('Error deleting location:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(404).json({ error: 'Location not found.' });
+        return;
+      }
+
+      const creatorId = locationResult.rows[0].created_by_user_id;
+      if (creatorId !== userId) {
+        await client.query('ROLLBACK');
+        res.status(403).json({ error: 'Forbidden: You are not authorized to delete this campground.' });
+        return;
+      }
+
+      await client.query('DELETE FROM locations WHERE id = $1', [locationId]);
+      await client.query('COMMIT');
+      res.status(200).json({ message: 'Campground deleted successfully.' });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('Error deleting location:', error);
+      res.status(500).json({ error: 'Internal server error' });
     } finally {
-        client.release();
+      client.release();
     }
-
-
-    apiRoutes.put('/locations/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<any> => {
-      const { id: locationId } = req.params;
-      const { name, latitude, longitude } = req.body; // The new data from the edit form
-      const userId = req.user?.id;
-  
-      if (!name || latitude === undefined || longitude === undefined) {
-          return res.status(400).json({ error: 'Name and coordinates are required.' });
-      }
-      if (!userId) {
-          return res.status(401).json({ error: 'User not authenticated.' });
-      }
-  
-      const client = await pool.connect();
-      try {
-          await client.query('BEGIN');
-  
-          // First, find the location to verify its creator
-          const locationResult = await client.query(
-              'SELECT created_by_user_id FROM locations WHERE id = $1',
-              [locationId]
-          );
-  
-          if (locationResult.rows.length === 0) {
-              await client.query('ROLLBACK');
-              return res.status(404).json({ error: 'Location not found.' });
-          }
-  
-          // SECURITY CHECK: Ensure the user editing is the user who created it
-          if (locationResult.rows[0].created_by_user_id !== userId) {
-              await client.query('ROLLBACK');
-              return res.status(403).json({ error: 'Forbidden: You are not authorized to edit this campground.' });
-          }
-  
-          // If the check passes, update the location
-          const updateQuery = `
-              UPDATE locations 
-              SET name = $1, coordinates = ST_SetSRID(ST_MakePoint($2, $3), 4326), updated_at = NOW()
-              WHERE id = $4
-              RETURNING *;
-          `;
-          const result = await client.query(updateQuery, [name, longitude, latitude, locationId]);
-  
-          await client.query('COMMIT');
-          res.status(200).json(result.rows[0]);
-  
-      } catch (error) {
-          await client.query('ROLLBACK');
-          console.error('Error updating location:', error);
-          res.status(500).json({ error: 'Internal server error' });
-      } finally {
-          client.release();
-      }
   });
 
-
-  apiRoutes.put('/locations/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<any> => {
+  apiRoutes.put('/locations/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
     const { id: locationId } = req.params;
-    const { name, latitude, longitude } = req.body; // The new data from the edit form
+    const { name, latitude, longitude } = req.body;
     const userId = req.user?.id;
 
     if (!name || latitude === undefined || longitude === undefined) {
-        return res.status(400).json({ error: 'Name and coordinates are required.' });
+      res.status(400).json({ error: 'Name and coordinates are required.' });
+      return;
     }
     if (!userId) {
-        return res.status(401).json({ error: 'User not authenticated.' });
+      res.status(401).json({ error: 'User not authenticated.' });
+      return;
     }
 
     const client = await pool.connect();
     try {
-        await client.query('BEGIN');
+      await client.query('BEGIN');
 
-        // First, find the location to verify its creator
-        const locationResult = await client.query(
-            'SELECT created_by_user_id FROM locations WHERE id = $1',
-            [locationId]
-        );
+      const locationResult = await client.query(
+        'SELECT created_by_user_id FROM locations WHERE id = $1',
+        [locationId]
+      );
 
-        if (locationResult.rows.length === 0) {
-            await client.query('ROLLBACK');
-            return res.status(404).json({ error: 'Location not found.' });
-        }
-
-        // SECURITY CHECK: Ensure the user editing is the user who created it
-        if (locationResult.rows[0].created_by_user_id !== userId) {
-            await client.query('ROLLBACK');
-            return res.status(403).json({ error: 'Forbidden: You are not authorized to edit this campground.' });
-        }
-
-        // If the check passes, update the location
-        const updateQuery = `
-            UPDATE locations 
-            SET name = $1, coordinates = ST_SetSRID(ST_MakePoint($2, $3), 4326), updated_at = NOW()
-            WHERE id = $4
-            RETURNING *;
-        `;
-        const result = await client.query(updateQuery, [name, longitude, latitude, locationId]);
-
-        await client.query('COMMIT');
-        res.status(200).json(result.rows[0]);
-
-    } catch (error) {
+      if (locationResult.rows.length === 0) {
         await client.query('ROLLBACK');
-        console.error('Error updating location:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(404).json({ error: 'Location not found.' });
+        return;
+      }
+
+      if (locationResult.rows[0].created_by_user_id !== userId) {
+        await client.query('ROLLBACK');
+        res.status(403).json({ error: 'Forbidden: You are not authorized to edit this campground.' });
+        return;
+      }
+
+      const updateQuery = `
+        UPDATE locations 
+        SET name = $1, coordinates = ST_SetSRID(ST_MakePoint($2, $3), 4326), updated_at = NOW()
+        WHERE id = $4
+        RETURNING *;
+      `;
+      const result = await client.query(updateQuery, [name, longitude, latitude, locationId]);
+
+      await client.query('COMMIT');
+      res.status(200).json(result.rows[0]);
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('Error updating location:', error);
+      res.status(500).json({ error: 'Internal server error' });
     } finally {
-        client.release();
+      client.release();
     }
-})
-});
+  });
 
 
 export default apiRoutes;

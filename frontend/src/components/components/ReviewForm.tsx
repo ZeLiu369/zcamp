@@ -16,7 +16,7 @@ export function ReviewForm({ locationId, onReviewSubmit }: ReviewFormProps) {
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const { token } = useAuth();
+  const { user } = useAuth();
 
   // We will add the handleSubmit logic in the next step
   const handleSubmit = async (event: FormEvent) => {
@@ -25,7 +25,7 @@ export function ReviewForm({ locationId, onReviewSubmit }: ReviewFormProps) {
       setError("Please select a rating.");
       return;
     }
-    if (!token) {
+    if (!user) {
       setError("You must be logged in to submit a review.");
       return;
     }
@@ -35,9 +35,9 @@ export function ReviewForm({ locationId, onReviewSubmit }: ReviewFormProps) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Send the auth token
         },
         body: JSON.stringify({ rating, comment, locationId }),
+        credentials: "include",
       });
 
       const data = await response.json();
