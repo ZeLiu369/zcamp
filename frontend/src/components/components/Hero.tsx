@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"; // Import the button
+import Link from "next/link";
 
 export function Hero() {
   return (
@@ -14,7 +15,9 @@ export function Hero() {
           </p>
         </div>
         <div className="mt-6">
-          <Button size="lg">Explore Campgrounds</Button>
+          <Button size="lg" asChild>
+            <Link href="/explore">Explore Campgrounds</Link>
+          </Button>
         </div>
       </div>
     </section>
