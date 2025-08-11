@@ -76,8 +76,12 @@ export default function LocationDetailPage() {
       }
       const data: LocationDetail = await response.json();
       setLocation(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(String(err));
+      }
     } finally {
       setLoading(false);
     }
@@ -109,8 +113,12 @@ export default function LocationDetailPage() {
 
         // Refresh the location data to show the updated review list
         fetchLocationDetail();
-      } catch (err: any) {
-        alert(`Error: ${err.message}`);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError(String(err));
+        }
       }
     }
   };
@@ -147,8 +155,12 @@ export default function LocationDetailPage() {
 
       setIsEditDialogOpen(false);
       fetchLocationDetail(); // Refresh data
-    } catch (err: any) {
-      alert(`Error: ${err.message}`);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(String(err));
+      }
     }
   };
 
@@ -178,8 +190,12 @@ export default function LocationDetailPage() {
 
         alert("Campground deleted successfully.");
         router.push("/explore"); // Redirect to explore page after deletion
-      } catch (err: any) {
-        alert(`Error: ${err.message}`);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError(String(err));
+        }
       }
     }
   };

@@ -56,8 +56,12 @@ function ResetPasswordForm() {
 
       setMessage(data.message);
       setTimeout(() => router.push("/login"), 3000); // Redirect to login on success
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(String(err));
+      }
     }
   };
 

@@ -31,9 +31,12 @@ export default function LoginPage() {
       await login(email, password);
       // On success, redirect to the homepage
       router.push("/");
-    } catch (err: any) {
-      // If login function throws an error, display it
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(String(err));
+      }
     }
   };
 

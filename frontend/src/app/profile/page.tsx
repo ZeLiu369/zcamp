@@ -28,17 +28,17 @@ interface ProfileData {
 }
 
 export default function ProfilePage() {
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Redirect if not logged in
-    if (!isAuthLoading && !user) {
+    if (!isLoading && !user) {
       router.push("/login");
     }
-  }, [isAuthLoading, user, router]);
+  }, [isLoading, user, router]);
 
   useEffect(() => {
     if (user) {
@@ -60,7 +60,7 @@ export default function ProfilePage() {
     }
   }, [user]);
 
-  if (isAuthLoading || loading) {
+  if (isLoading || loading) {
     return <div className="text-center p-10">Loading profile...</div>;
   }
 

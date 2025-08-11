@@ -49,8 +49,12 @@ export function ReviewForm({ locationId, onReviewSubmit }: ReviewFormProps) {
       setRating(0);
       setComment("");
       onReviewSubmit();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(String(err));
+      }
     }
   };
 

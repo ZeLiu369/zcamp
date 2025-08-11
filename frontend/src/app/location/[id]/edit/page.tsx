@@ -30,7 +30,7 @@ export default function EditCampgroundPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
 
   const [name, setName] = useState("");
   const [pin, setPin] = useState<{
@@ -61,8 +61,12 @@ export default function EditCampgroundPage() {
         setName(data.name);
         const [longitude, latitude] = data.coordinates.coordinates;
         setPin({ latitude, longitude });
-      } catch (err) {
-        setError("Could not load campground data.");
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError(String(err));
+        }
       } finally {
         setLoading(false);
       }
@@ -75,10 +79,10 @@ export default function EditCampgroundPage() {
 
   // Redirect if user is not logged in
   useEffect(() => {
-    if (!isAuthLoading && !user) {
-      router.push("/login");
+    if (!isLoading && !user) {
+      void router.push("/login");
     }
-  }, [isAuthLoading, user, router]);
+  }, [isLoading, user, router]);
 
   const handleMapClick = (event: mapboxgl.MapMouseEvent) => {
     const { lng, lat } = event.lngLat;
@@ -112,12 +116,16 @@ export default function EditCampgroundPage() {
       if (!response.ok) throw new Error(data.error || "Failed to update.");
 
       router.push(`/location/${id}`); // Redirect back to the detail page on success
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(String(err));
+      }
     }
   };
 
-  if (loading || isAuthLoading) return <div>Loading...</div>;
+  if (loading || isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (

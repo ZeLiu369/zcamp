@@ -37,8 +37,12 @@ export default function ForgotPasswordPage() {
       if (!response.ok) throw new Error(data.error || "Something went wrong.");
 
       setMessage(data.message);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(String(err));
+      }
     }
   };
 

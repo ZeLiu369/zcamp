@@ -41,7 +41,7 @@ export default function AddCampgroundPage() {
     if (!isLoading && !user) {
       router.push("/login");
     }
-  }, [user, isLoading, router]);
+  }, [isLoading, user, router]);
 
   const handleAddressSelect = (coords: NewPin) => {
     setNewPin(coords);
@@ -105,8 +105,12 @@ export default function AddCampgroundPage() {
       setSuccess(`Successfully added ${data.name}!`);
       setName("");
       setNewPin(null); // 提交成功后清空图钉
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(String(err));
+      }
     }
   };
 
