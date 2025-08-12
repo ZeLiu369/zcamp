@@ -5,10 +5,11 @@ import Map, {
   NavigationControl,
   GeolocateControl,
   MapRef,
+  Popup,
 } from "react-map-gl/mapbox";
+import Link from "next/link";
 import { useEffect, useState, useMemo, useRef } from "react";
 import useSupercluster from "use-supercluster";
-import { useRouter } from "next/navigation";
 
 // Define a type for our location data for TypeScript safety
 type Location = {
@@ -50,13 +51,15 @@ function getClusterSizeClasses(pointCount: number): string {
 
 export default function ExplorePage() {
   const mapRef = useRef<MapRef>(null);
-  const router = useRouter();
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
   const [locations, setLocations] = useState<Location[]>([]);
   const [bounds, setBounds] = useState<
     [number, number, number, number] | undefined
   >(undefined);
   const [zoom, setZoom] = useState(3);
+
+  const [popupInfo, setPopupInfo] = useState<Location | null>(null);
 
   useEffect(() => {
     async function fetchLocations() {
@@ -118,8 +121,6 @@ export default function ExplorePage() {
     zoom,
     options: { radius: 40, maxZoom: 16 },
   });
-
-  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
   if (!mapboxToken) {
     return (
@@ -199,6 +200,10 @@ export default function ExplorePage() {
                 );
               }
 
+              const locationData = locations.find(
+                (loc) => loc.id === cluster.properties.locationId
+              );
+
               // If it's a single point, display the original marker
               return (
                 <Marker
@@ -206,15 +211,41 @@ export default function ExplorePage() {
                   latitude={latitude}
                   longitude={longitude}
                 >
-                  <div
-                    className="h-4 w-4 bg-blue-500 rounded-full border-2 border-white shadow-md cursor-pointer"
-                    onClick={() =>
-                      router.push(`/location/${cluster.properties.locationId}`)
+                  <Link
+                    href={`/location/${cluster.properties.locationId}`}
+                    className="inline-block h-4 w-4 bg-blue-500 rounded-full border-2 border-white shadow-md
+             focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                    onMouseEnter={() =>
+                      locationData && setPopupInfo(locationData)
                     }
+                    onMouseLeave={() => setPopupInfo(null)}
+                    onFocus={() => locationData && setPopupInfo(locationData)}
+                    onBlur={() => setPopupInfo(null)}
                   />
                 </Marker>
               );
             })}
+
+            {popupInfo && (
+              <Popup
+                longitude={parseCoords(popupInfo.coords)![0]}
+                latitude={parseCoords(popupInfo.coords)![1]}
+                onClose={() => setPopupInfo(null)}
+                closeOnClick={false}
+                anchor="bottom"
+                offset={40}
+              >
+                <div className="p-1">
+                  <h3 className="font-bold">{popupInfo.name}</h3>
+                  <Link
+                    href={`/location/${popupInfo.id}`}
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    View Details
+                  </Link>
+                </div>
+              </Popup>
+            )}
           </Map>
         </div>
       </div>
