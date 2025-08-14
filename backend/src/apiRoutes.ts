@@ -125,7 +125,14 @@ apiRoutes.get('/locations/:id', async (req: Request, res: Response): Promise<any
                 )
               ) FILTER (WHERE r.id IS NOT NULL),
               '[]'
-            ) as reviews
+            ) as reviews,
+             (
+              SELECT COALESCE(json_agg(
+                json_build_object('id', i.id, 'url', i.url, 'user_id', i.user_id)
+              ), '[]')
+              FROM campground_images i
+              WHERE i.location_id = l.id
+            ) as images
           FROM
             locations l
           LEFT JOIN

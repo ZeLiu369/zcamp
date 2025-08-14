@@ -21,6 +21,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 // Define the types for the data we expect from our API
 interface Review {
@@ -32,16 +34,23 @@ interface Review {
   user_id: string;
 }
 
+interface CampgroundImage {
+  id: string;
+  url: string;
+  user_id: string;
+}
+
 interface LocationDetail {
   id: string;
   name: string;
   created_by_user_id: string | null;
-  osm_tags: any;
+  osm_tags: Record<string, string>;
   coordinates: {
     type: "Point";
     coordinates: [number, number]; // [longitude, latitude]
   };
   reviews: Review[];
+  images: CampgroundImage[];
 }
 
 export default function LocationDetailPage() {
@@ -52,6 +61,9 @@ export default function LocationDetailPage() {
   const [location, setLocation] = useState<LocationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
@@ -66,6 +78,51 @@ export default function LocationDetailPage() {
     if (!id) return;
     fetchLocationDetail();
   }, [id]);
+
+  const handleImageUpload = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!selectedFile) {
+      alert("Please select a file to upload.");
+      return;
+    }
+    if (!user) {
+      alert("You must be logged in to upload an image.");
+      return;
+    }
+
+    setUploading(true);
+
+    // We use FormData to send a file
+    const formData = new FormData();
+    formData.append("image", selectedFile);
+
+    try {
+      const response = await fetch(
+        `http://localhost:3002/api/locations/${id}/images`,
+        {
+          method: "POST",
+          credentials: "include",
+          // Multer needs the boundary header, so don't set Content-Type
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to upload image.");
+
+      setSelectedFile(null); // Clear the file input
+      fetchLocationDetail(); // Refresh the page data to show the new image
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(String(err));
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
 
   async function fetchLocationDetail() {
     try {
@@ -234,6 +291,26 @@ export default function LocationDetailPage() {
         )}
       </div>
 
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-4">Photos</h2>
+        {location.images.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {location.images.map((img) => (
+              <img
+                key={img.id}
+                src={img.url}
+                alt={`Photo of ${location.name}`}
+                className="w-full h-48 object-cover rounded-lg"
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500">
+            No photos yet. Be the first to add one!
+          </p>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* --- 左侧主内容区 (2/3 宽度) --- */}
         <div className="md:col-span-2 space-y-8">
@@ -261,6 +338,34 @@ export default function LocationDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          {user && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Upload a Photo</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form
+                  onSubmit={handleImageUpload}
+                  className="flex items-center gap-4"
+                >
+                  <div className="grid w-full max-w-sm items-center gap-1.5">
+                    <Label htmlFor="picture">Picture</Label>
+                    <Input
+                      id="picture"
+                      type="file"
+                      onChange={(e) =>
+                        e.target.files && setSelectedFile(e.target.files[0])
+                      }
+                    />
+                  </div>
+                  <Button type="submit" disabled={uploading || !selectedFile}>
+                    {uploading ? "Uploading..." : "Upload"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          )}
 
           {/* "写评论" 卡片 (现在移到了左侧) */}
           {user ? (

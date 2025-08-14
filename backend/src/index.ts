@@ -9,6 +9,7 @@ import authRoutes from './authRoutes';
 import apiRoutes from './apiRoutes';
 import reviewsRoutes from './reviewsRoutes';
 import profileRoutes from './profileRoutes';
+import imageRoutes from './imageRoutes';
 
 
 const app = express();
@@ -32,6 +33,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api', apiRoutes);
 app.use('/api/reviews', reviewsRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/', imageRoutes);
 
 // --- Server Startup ---
 app.listen(port, () => {
