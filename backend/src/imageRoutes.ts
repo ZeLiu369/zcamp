@@ -105,4 +105,66 @@ router.post('/locations/:id/images', authMiddleware, upload.single('image'), asy
     }
 });
 
+router.delete('/images/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+    const { id: imageId } = req.params; // The database UUID of the image record
+    const userId = req.user?.id;
+
+    if (!userId) {
+        res.status(401).json({ error: 'User not authenticated.' });
+        return;
+    }
+    if (!bucketName) {
+        res.status(500).json({ error: 'Server configuration error.' });
+        return;
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // First, find the image in our database to get its S3 Key (public_id) and its uploader's ID
+        const imageResult = await client.query(
+            'SELECT user_id, public_id FROM campground_images WHERE id = $1',
+            [imageId]
+        );
+        
+        if (imageResult.rows.length === 0) {
+            await client.query('ROLLBACK');
+            res.status(404).json({ error: 'Image not found.' });
+            return;
+        }
+
+        const uploaderId = imageResult.rows[0].user_id;
+        const s3Key = imageResult.rows[0].public_id;
+
+        // SECURITY CHECK: Ensure the person deleting is the person who uploaded it
+        if (uploaderId !== userId) {
+            await client.query('ROLLBACK');
+            res.status(403).json({ error: 'Forbidden: You are not authorized to delete this image.' });
+            return;
+        }
+
+        // 1. Delete the object from the S3 bucket
+        const deleteCommand = new DeleteObjectCommand({
+            Bucket: bucketName,
+            Key: s3Key,
+        });
+        await s3Client.send(deleteCommand);
+
+        // 2. If S3 deletion is successful, delete the record from our database
+        await client.query('DELETE FROM campground_images WHERE id = $1', [imageId]);
+
+        await client.query('COMMIT');
+
+        res.status(200).json({ message: 'Image deleted successfully.' });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error deleting image:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+});
+
 export default router;

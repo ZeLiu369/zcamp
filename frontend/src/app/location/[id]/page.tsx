@@ -5,7 +5,7 @@ import { useEffect, useState, FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Map, { Marker } from "react-map-gl/mapbox";
-import { Star, Trash2, Pencil } from "lucide-react";
+import { Star, Trash2, Pencil, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeepBlueMapPin } from "@/components/icons/MapPin";
 import { ReviewForm } from "@/components/components/ReviewForm";
@@ -23,6 +23,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "react-hot-toast";
 
 // Define the types for the data we expect from our API
 interface Review {
@@ -78,51 +79,6 @@ export default function LocationDetailPage() {
     if (!id) return;
     fetchLocationDetail();
   }, [id]);
-
-  const handleImageUpload = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!selectedFile) {
-      alert("Please select a file to upload.");
-      return;
-    }
-    if (!user) {
-      alert("You must be logged in to upload an image.");
-      return;
-    }
-
-    setUploading(true);
-
-    // We use FormData to send a file
-    const formData = new FormData();
-    formData.append("image", selectedFile);
-
-    try {
-      const response = await fetch(
-        `http://localhost:3002/api/locations/${id}/images`,
-        {
-          method: "POST",
-          credentials: "include",
-          // Multer needs the boundary header, so don't set Content-Type
-          body: formData,
-        }
-      );
-
-      const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.error || "Failed to upload image.");
-
-      setSelectedFile(null); // Clear the file input
-      fetchLocationDetail(); // Refresh the page data to show the new image
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError(String(err));
-      }
-    } finally {
-      setUploading(false);
-    }
-  };
 
   async function fetchLocationDetail() {
     try {
@@ -257,6 +213,103 @@ export default function LocationDetailPage() {
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const fiveMB = 5 * 1024 * 1024;
+
+      // --- THE KEY CHANGE IS HERE ---
+      if (file.size > fiveMB) {
+        // Show an error toast
+        toast.error(
+          "File is too large. Please select a file smaller than 5MB."
+        );
+        // Clear the file input
+        e.target.value = "";
+        setSelectedFile(null);
+      } else {
+        setSelectedFile(file);
+      }
+    }
+  };
+
+  const handleImageUpload = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!selectedFile) {
+      alert("Please select a file to upload.");
+      return;
+    }
+    if (!user) {
+      alert("You must be logged in to upload an image.");
+      return;
+    }
+
+    setUploading(true);
+
+    // We use FormData to send a file
+    const formData = new FormData();
+    formData.append("image", selectedFile);
+
+    try {
+      const response = await fetch(
+        `http://localhost:3002/api/locations/${id}/images`,
+        {
+          method: "POST",
+          credentials: "include",
+          // Multer needs the boundary header, so don't set Content-Type
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to upload image.");
+
+      setSelectedFile(null); // Clear the file input
+      fetchLocationDetail(); // Refresh the page data to show the new image
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(String(err));
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteImage = async (imageId: string) => {
+    if (!user) {
+      alert("You must be logged in to delete an image.");
+      return;
+    }
+
+    if (confirm("Are you sure you want to delete this image?")) {
+      try {
+        const response = await fetch(
+          `http://localhost:3002/api/images/${imageId}`,
+          {
+            method: "DELETE",
+            credentials: "include", // Use this for cookie-based auth
+          }
+        );
+
+        const data = await response.json();
+        if (!response.ok)
+          throw new Error(data.error || "Failed to delete image.");
+
+        // Refresh the location data to show the updated image gallery
+        fetchLocationDetail();
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError(String(err));
+        }
+      }
+    }
+  };
+
   if (loading) {
     return <div className="text-center p-10">Loading...</div>;
   }
@@ -296,12 +349,24 @@ export default function LocationDetailPage() {
         {location.images.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {location.images.map((img) => (
-              <img
-                key={img.id}
-                src={img.url}
-                alt={`Photo of ${location.name}`}
-                className="w-full h-48 object-cover rounded-lg"
-              />
+              <div key={img.id} className="relative group">
+                <img
+                  src={img.url}
+                  alt={`Photo of ${location.name}`}
+                  className="w-full h-48 object-cover rounded-lg"
+                />
+                {/* THE KEY CHANGE: Conditionally render the Delete button */}
+                {user && user.id === img.user_id && (
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => handleDeleteImage(img.id)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             ))}
           </div>
         ) : (
@@ -339,6 +404,7 @@ export default function LocationDetailPage() {
             </CardContent>
           </Card>
 
+          {/* upload image section */}
           {user && (
             <Card>
               <CardHeader>
@@ -354,9 +420,7 @@ export default function LocationDetailPage() {
                     <Input
                       id="picture"
                       type="file"
-                      onChange={(e) =>
-                        e.target.files && setSelectedFile(e.target.files[0])
-                      }
+                      onChange={handleFileSelect}
                     />
                   </div>
                   <Button type="submit" disabled={uploading || !selectedFile}>
