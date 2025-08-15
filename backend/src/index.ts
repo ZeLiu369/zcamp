@@ -4,12 +4,12 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 dotenv.config();
 
-import locationRoutes from './locationRoutes'; 
-import authRoutes from './authRoutes';
-import apiRoutes from './apiRoutes';
-import reviewsRoutes from './reviewsRoutes';
-import profileRoutes from './profileRoutes';
-import imageRoutes from './imageRoutes';
+import locationRoutes from './routes/locationRoutes'; 
+import authRoutes from './routes/authRoutes';
+import apiRoutes from './routes/apiRoutes';
+import reviewsRoutes from './routes/reviewsRoutes';
+import profileRoutes from './routes/profileRoutes';
+import imageRoutes from './routes/imageRoutes';
 
 
 const app = express();

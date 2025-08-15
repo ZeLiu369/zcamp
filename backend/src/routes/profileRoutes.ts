@@ -1,6 +1,6 @@
 import { Router, Response } from 'express';
 import { Pool } from 'pg';
-import { authMiddleware, AuthRequest } from './middleware';
+import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
 
 const router = Router();
 const pool = new Pool({
