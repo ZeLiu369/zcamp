@@ -1,8 +1,7 @@
-// In backend/src/middleware.ts
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 
-// 我们需要扩展 Express 的 Request 类型，以便可以附加用户信息
+// Extend Express's Request type to allow attaching user information
 export interface AuthRequest extends Request {
   user?: {
     id: string;

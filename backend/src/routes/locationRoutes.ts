@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { Pool } from 'pg';
-import { authMiddleware, AuthRequest } from '../middleware/authMiddleware'; 
+import { authMiddleware, AuthRequest } from '#/middlewares/authMiddleware.js'; 
 
 // Database connection configuration
 const pool = new Pool({

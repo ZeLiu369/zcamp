@@ -1,28 +1,33 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/app.js",
+  "type": "module",
+  "imports": {
+    "#/*": "./dist/*"
+  },
+  "exports": "./dist/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/app.ts",
-    "import:data": "ts-node src/import-campgrounds.ts"
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "dev": "tsx watch src/app.ts",
+    "import:data": "tsx src/import-campgrounds.ts",
+    "test": "vitest"
   },
   "keywords": [],
-  "author": "",
+  "author": "Ze Liu",
   "license": "ISC",
-  "description": "",
+  "description": "A web application to help people find and share information about campgrounds.",
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.0.10",
     "@types/nodemailer": "^6.4.17",
     "@types/pg": "^8.15.4",
-    "nodemon": "^3.1.10",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.20.4",
     "typescript": "^5.8.3"
   },
   "dependencies": {

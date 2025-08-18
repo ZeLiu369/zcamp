@@ -63,7 +63,7 @@ export default function LocationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const [uploading, setUploading] = useState(false);
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -214,41 +214,56 @@ export default function LocationDetailPage() {
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const fiveMB = 5 * 1024 * 1024;
+    if (e.target.files && e.target.files.length > 0) {
+      const files = e.target.files;
 
-      // --- THE KEY CHANGE IS HERE ---
-      if (file.size > fiveMB) {
-        // Show an error toast
+      // --- 1. 定义最大文件数量 (Define the max file count) ---
+      const maxFiles = 10;
+
+      // --- 2. 检查文件总数 (Check the total file count) ---
+      // It's best to check the count before checking individual file sizes.
+      if (files.length > maxFiles) {
         toast.error(
-          "File is too large. Please select a file smaller than 5MB."
+          `You can only upload a maximum of ${maxFiles} photos at a time.`
         );
-        // Clear the file input
-        e.target.value = "";
-        setSelectedFile(null);
-      } else {
-        setSelectedFile(file);
+        e.target.value = ""; // Clear the invalid selection
+        setSelectedFiles(null);
+        return; // Stop the function
       }
+
+      // --- 3. 检查每个文件的大小 (Check individual file sizes) ---
+      // This part remains the same.
+      const fiveMB = 5 * 1024 * 1024;
+      for (let i = 0; i < files.length; i++) {
+        if (files[i].size > fiveMB) {
+          toast.error(
+            `File "${files[i].name}" is too large. Please select files smaller than 5MB.`
+          );
+          e.target.value = ""; // Clear the input
+          setSelectedFiles(null);
+          return;
+        }
+      }
+
+      setSelectedFiles(files);
     }
   };
 
   const handleImageUpload = async (event: FormEvent) => {
     event.preventDefault();
-    if (!selectedFile) {
-      alert("Please select a file to upload.");
-      return;
-    }
-    if (!user) {
-      alert("You must be logged in to upload an image.");
+    if (!selectedFiles || selectedFiles.length === 0) {
+      alert("Please select files to upload.");
       return;
     }
 
     setUploading(true);
-
-    // We use FormData to send a file
     const formData = new FormData();
-    formData.append("image", selectedFile);
+
+    // Append all selected files to the FormData object
+    // The key 'images' must match the one in upload.array('images', 5) on the backend
+    for (let i = 0; i < selectedFiles.length; i++) {
+      formData.append("images", selectedFiles[i]);
+    }
 
     try {
       const response = await fetch(
@@ -256,19 +271,23 @@ export default function LocationDetailPage() {
         {
           method: "POST",
           credentials: "include",
-          // Multer needs the boundary header, so don't set Content-Type
           body: formData,
         }
       );
 
       const data = await response.json();
       if (!response.ok)
-        throw new Error(data.error || "Failed to upload image.");
+        throw new Error(data.error || "Failed to upload images.");
 
-      setSelectedFile(null); // Clear the file input
-      fetchLocationDetail(); // Refresh the page data to show the new image
+      setSelectedFiles(null);
+      // This clears the file input visually for the user
+      const fileInput = document.getElementById("picture") as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
+
+      fetchLocationDetail();
     } catch (err: unknown) {
       if (err instanceof Error) {
+        toast.error(`Upload failed: ${err.message}`);
         setError(err.message);
       } else {
         setError(String(err));
@@ -416,14 +435,16 @@ export default function LocationDetailPage() {
                   className="flex items-center gap-4"
                 >
                   <div className="grid w-full max-w-sm items-center gap-1.5">
-                    <Label htmlFor="picture">Picture</Label>
+                    <Label htmlFor="picture">Pictures</Label>
+                    {/* Add the 'multiple' attribute to the input */}
                     <Input
                       id="picture"
                       type="file"
                       onChange={handleFileSelect}
+                      multiple
                     />
                   </div>
-                  <Button type="submit" disabled={uploading || !selectedFile}>
+                  <Button type="submit" disabled={uploading || !selectedFiles}>
                     {uploading ? "Uploading..." : "Upload"}
                   </Button>
                 </form>

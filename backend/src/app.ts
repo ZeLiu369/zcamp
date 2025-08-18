@@ -1,15 +1,15 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
-dotenv.config();
 
-import locationRoutes from './routes/locationRoutes'; 
-import authRoutes from './routes/authRoutes';
-import apiRoutes from './routes/apiRoutes';
-import reviewsRoutes from './routes/reviewsRoutes';
-import profileRoutes from './routes/profileRoutes';
-import imageRoutes from './routes/imageRoutes';
+
+import locationRoutes from '#/routes/locationRoutes.js'; 
+import authRoutes from '#/routes/authRoutes.js';
+import apiRoutes from '#/routes/apiRoutes.js';
+import reviewsRoutes from '#/routes/reviewsRoutes.js';
+import profileRoutes from '#/routes/profileRoutes.js';
+import imageRoutes from '#/routes/imageRoutes.js';
 
 
 const app = express();
