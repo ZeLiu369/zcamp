@@ -9,6 +9,8 @@ import {
   useCallback,
   useMemo,
 } from "react";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 // The User interface remains the same
 interface User {
@@ -29,6 +31,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   // This function checks with the backend to see if we have a valid session cookie
   // if user has loggin, get user information, name and id
@@ -89,16 +92,28 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   );
 
   const logout = useCallback(async () => {
+    setIsLoading(true); // A. Start loading state
     try {
       await fetch("http://localhost:3002/api/auth/logout", {
         method: "POST",
         credentials: "include",
       });
+
+      // B. Show a success confirmation toast
+      toast.success("Successfully logged out.");
+
       setUser(null);
+
+      // C. Redirect to the homepage
+      router.push("/");
     } catch (error) {
       console.error("Logout failed", error);
+      // D. Show an error toast if something goes wrong
+      toast.error("Logout failed. Please try again.");
+    } finally {
+      setIsLoading(false); // E. Always stop the loading state
     }
-  }, []);
+  }, [router]); // router is a dependency now
 
   const value = useMemo(
     () => ({
