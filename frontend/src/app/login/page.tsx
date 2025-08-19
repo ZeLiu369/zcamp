@@ -12,31 +12,39 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useState, FormEvent } from "react";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError(null);
+    setIsLoading(true);
 
     try {
       // Call the login function from the context
       await login(email, password);
+
+      toast.success("Login successful! Redirecting...");
       // On success, redirect to the homepage
-      router.push("/");
+      setTimeout(() => {
+        router.push("/");
+      }, 1000);
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError(String(err));
-      }
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      toast.error(errorMessage);
+      setIsLoading(false); // Stop loading on error
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -81,8 +89,15 @@ export default function LoginPage() {
                 Forgot your password?
               </Link>
             </div>
-            <Button type="submit" className="w-full">
-              Login
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Please wait
+                </>
+              ) : (
+                "Login"
+              )}
             </Button>
 
             {/* 显示错误信息 */}

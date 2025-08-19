@@ -12,18 +12,21 @@ import Image from "next/image";
 // Placeholder data until we connect to our API
 const featuredCampgrounds = [
   {
+    id: "gros-morne",
     name: "Gros Morne National Park",
     province: "Newfoundland and Labrador",
     rating: 5,
     imageUrl: "/image/gros_morne_camp.jpg",
   },
   {
+    id: "banff",
     name: "Banff National Park",
     province: "Alberta",
     rating: 5,
     imageUrl: "/image/banff_camp.jpg",
   },
   {
+    id: "algonquin",
     name: "Algonquin Provincial Park",
     province: "Ontario",
     rating: 4,
@@ -45,13 +48,14 @@ export function Featured() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {featuredCampgrounds.map((camp) => (
-            <Card key={camp.name} className="p-0">
+            <Card key={camp.id} className="p-0 flex flex-col">
               <CardHeader className="p-0 relative h-60 rounded-t-xl overflow-hidden">
                 <Image
                   src={camp.imageUrl}
                   alt={`Image of ${camp.name}`}
                   fill
                   className="object-cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
               </CardHeader>
               <CardContent className="p-6">
@@ -62,12 +66,13 @@ export function Featured() {
                 <div className="flex items-center mt-4">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
-                      key={i}
+                      key={`star-${i}-${camp.id}`}
                       className={`h-5 w-5 ${
                         i < camp.rating
                           ? "text-yellow-400 fill-yellow-400"
                           : "text-gray-300"
                       }`}
+                      aria-hidden="true"
                     />
                   ))}
                 </div>
