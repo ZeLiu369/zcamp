@@ -7,6 +7,7 @@ import {
   useEffect,
   ReactNode,
   useCallback,
+  useMemo,
 } from "react";
 
 // The User interface remains the same
@@ -25,7 +26,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -61,30 +62,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuthStatus();
   }, [checkAuthStatus]);
 
-  const login = async (email: string, password: string): Promise<void> => {
-    try {
-      const response = await fetch("http://localhost:3002/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-        credentials: "include", // IMPORTANT: Needed for the backend to set the cookie
-      });
+  const login = useCallback(
+    async (email: string, password: string): Promise<void> => {
+      try {
+        const response = await fetch("http://localhost:3002/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+          credentials: "include", // IMPORTANT: Needed for the backend to set the cookie
+        });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Login failed");
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Login failed");
+        }
+
+        // After successful login, check the auth status again to get user data
+        await checkAuthStatus();
+      } catch (error) {
+        console.error("An error occurred during the login api call:", error);
+        // Re-throw the error so the login page can display it
+        throw error;
       }
+    },
+    [checkAuthStatus]
+  );
 
-      // After successful login, check the auth status again to get user data
-      await checkAuthStatus();
-    } catch (error) {
-      console.error("An error occurred during the login api call:", error);
-      // Re-throw the error so the login page can display it
-      throw error;
-    }
-  };
-
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await fetch("http://localhost:3002/api/auth/logout", {
         method: "POST",
@@ -94,9 +98,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Logout failed", error);
     }
-  };
+  }, []);
 
-  const value = { user, login, logout, isLoading };
+  const value = useMemo(
+    () => ({
+      user,
+      login,
+      logout,
+      isLoading,
+    }),
+    [user, isLoading, login, logout]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
