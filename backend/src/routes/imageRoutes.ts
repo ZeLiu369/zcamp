@@ -1,11 +1,8 @@
 // In backend/src/imageRoutes.ts
 
 import { Router, Response } from 'express';
-// import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import multer from 'multer';
-import crypto from 'crypto'; // Built-in Node.js module
 import { authMiddleware, AuthRequest } from '#/middlewares/authMiddleware.js'
-import { Pool } from 'pg';
 import { ImageService } from '#/services/imageService.js';
 
 const router = Router();

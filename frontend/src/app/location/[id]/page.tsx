@@ -1,7 +1,7 @@
 // In frontend/src/app/location/[id]/page.tsx
 "use client";
 
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useState, useCallback, FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Map, { Marker } from "react-map-gl/mapbox";
@@ -11,6 +11,7 @@ import { DeepBlueMapPin } from "@/components/icons/MapPin";
 import { ReviewForm } from "@/components/components/ReviewForm";
 import { useAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -72,15 +73,10 @@ export default function LocationDetailPage() {
   const [editedComment, setEditedComment] = useState("");
 
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-
   const router = useRouter();
 
-  useEffect(() => {
-    if (!id) return;
-    fetchLocationDetail();
-  }, [id]);
-
-  async function fetchLocationDetail() {
+  const fetchLocationDetail = useCallback(async () => {
+    console.log("fetchLocationDetail");
     try {
       setLoading(true);
       const response = await fetch(`http://localhost:3002/api/locations/${id}`);
@@ -98,7 +94,12 @@ export default function LocationDetailPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    fetchLocationDetail();
+  }, [id, fetchLocationDetail]);
 
   const handleDeleteReview = async (reviewId: string) => {
     if (!user) {
@@ -217,10 +218,10 @@ export default function LocationDetailPage() {
     if (e.target.files && e.target.files.length > 0) {
       const files = e.target.files;
 
-      // --- 1. 定义最大文件数量 (Define the max file count) ---
+      // --- 1. Define the max file count ---
       const maxFiles = 10;
 
-      // --- 2. 检查文件总数 (Check the total file count) ---
+      // --- 2. Check the total file count ---
       // It's best to check the count before checking individual file sizes.
       if (files.length > maxFiles) {
         toast.error(
@@ -231,13 +232,12 @@ export default function LocationDetailPage() {
         return; // Stop the function
       }
 
-      // --- 3. 检查每个文件的大小 (Check individual file sizes) ---
-      // This part remains the same.
+      // --- 3.Check individual file sizes) ---
       const fiveMB = 5 * 1024 * 1024;
-      for (let i = 0; i < files.length; i++) {
-        if (files[i].size > fiveMB) {
+      for (const file of files) {
+        if (file.size > fiveMB) {
           toast.error(
-            `File "${files[i].name}" is too large. Please select files smaller than 5MB.`
+            `File "${file.name}" is too large. Please select files smaller than 5MB.`
           );
           e.target.value = ""; // Clear the input
           setSelectedFiles(null);
@@ -261,8 +261,8 @@ export default function LocationDetailPage() {
 
     // Append all selected files to the FormData object
     // The key 'images' must match the one in upload.array('images', 5) on the backend
-    for (let i = 0; i < selectedFiles.length; i++) {
-      formData.append("images", selectedFiles[i]);
+    for (const file of selectedFiles) {
+      formData.append("images", file);
     }
 
     try {
@@ -368,11 +368,17 @@ export default function LocationDetailPage() {
         {location.images.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {location.images.map((img) => (
-              <div key={img.id} className="relative group">
-                <img
+              <div
+                key={img.id}
+                className="relative w-full h-48 rounded-lg overflow-hidden group"
+              >
+                <Image
                   src={img.url}
                   alt={`Photo of ${location.name}`}
-                  className="w-full h-48 object-cover rounded-lg"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                  priority={true}
                 />
                 {/* THE KEY CHANGE: Conditionally render the Delete button */}
                 {user && user.id === img.user_id && (
@@ -558,8 +564,10 @@ export default function LocationDetailPage() {
           </DialogHeader>
           <form onSubmit={handleUpdateReview} className="space-y-4 py-4">
             <div>
-              <label className="font-semibold">Your Rating</label>
-              <div className="flex items-center gap-1 mt-2">
+              <label htmlFor="rating-input" className="font-semibold">
+                Your Rating
+              </label>
+              <div id="rating-input" className="flex items-center gap-1 mt-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
