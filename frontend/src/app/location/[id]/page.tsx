@@ -11,7 +11,6 @@ import { DeepBlueMapPin } from "@/components/icons/MapPin";
 import { ReviewForm } from "@/components/components/ReviewForm";
 import { useAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-hot-toast";
+import { ImageGallery } from "@/components/components/ImageGallery";
 
 // Define the types for the data we expect from our API
 interface Review {
@@ -362,45 +362,6 @@ export default function LocationDetailPage() {
           </div>
         )}
       </div>
-
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Photos</h2>
-        {location.images.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {location.images.map((img) => (
-              <div
-                key={img.id}
-                className="relative w-full h-48 rounded-lg overflow-hidden group"
-              >
-                <Image
-                  src={img.url}
-                  alt={`Photo of ${location.name}`}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                  priority={true}
-                />
-                {/* THE KEY CHANGE: Conditionally render the Delete button */}
-                {user && user.id === img.user_id && (
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => handleDeleteImage(img.id)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500">
-            No photos yet. Be the first to add one!
-          </p>
-        )}
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* --- 左侧主内容区 (2/3 宽度) --- */}
         <div className="md:col-span-2 space-y-8">
@@ -598,6 +559,10 @@ export default function LocationDetailPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <div className="mb-8">
+        <ImageGallery images={location.images} onDelete={handleDeleteImage} />
+      </div>
     </div>
   );
 }
