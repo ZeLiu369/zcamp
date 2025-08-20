@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-hot-toast";
 import { ImageGallery } from "@/components/components/ImageGallery";
+import { ImagePreview } from "@/components/components/ImagePreview";
 
 // Define the types for the data we expect from our API
 interface Review {
@@ -233,11 +234,11 @@ export default function LocationDetailPage() {
       }
 
       // --- 3.Check individual file sizes) ---
-      const fiveMB = 5 * 1024 * 1024;
+      const tenMB = 10 * 1024 * 1024;
       for (const file of files) {
-        if (file.size > fiveMB) {
+        if (file.size > tenMB) {
           toast.error(
-            `File "${file.name}" is too large. Please select files smaller than 5MB.`
+            `File "${file.name}" is too large. Please select files smaller than 10MB.`
           );
           e.target.value = ""; // Clear the input
           setSelectedFiles(null);
@@ -361,6 +362,10 @@ export default function LocationDetailPage() {
             </Button>
           </div>
         )}
+      </div>
+      <div className="mb-8">
+        {/* <ImageGallery images={location.images} onDelete={handleDeleteImage} /> */}
+        <ImagePreview images={location.images} locationId={location.id} />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* --- 左侧主内容区 (2/3 宽度) --- */}
@@ -559,10 +564,6 @@ export default function LocationDetailPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      <div className="mb-8">
-        <ImageGallery images={location.images} onDelete={handleDeleteImage} />
-      </div>
     </div>
   );
 }
