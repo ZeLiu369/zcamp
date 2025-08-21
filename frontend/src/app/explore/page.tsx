@@ -10,12 +10,16 @@ import Map, {
 import Link from "next/link";
 import { useEffect, useState, useMemo, useRef } from "react";
 import useSupercluster from "use-supercluster";
+import { Star } from "lucide-react";
+import Image from "next/image";
 
 // Define a type for our location data for TypeScript safety
 type Location = {
   id: string;
   name: string;
-  coords: string; // e.g., "POINT(-98.5795 39.8283)"
+  coords: string;
+  avg_rating: string | null; // The average rating can be null
+  image_url: string | null; // The image URL can be null
 };
 
 // Define the structure for a GeoJSON point, which supercluster needs
@@ -60,6 +64,7 @@ export default function ExplorePage() {
   const [zoom, setZoom] = useState(3);
 
   const [popupInfo, setPopupInfo] = useState<Location | null>(null);
+  const hidePopupTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     async function fetchLocations() {
@@ -77,7 +82,6 @@ export default function ExplorePage() {
         console.error(error);
       }
     }
-
     fetchLocations();
   }, []); // The empty array [] ensures this effect runs only once
 
@@ -97,6 +101,13 @@ export default function ExplorePage() {
     [locations]
   );
 
+  const { clusters, supercluster } = useSupercluster({
+    points,
+    bounds,
+    zoom,
+    options: { radius: 40, maxZoom: 16 },
+  });
+
   const updateMapState = () => {
     // Use optional chaining `?.` for safety in case the ref isn't ready
     const map = mapRef.current?.getMap();
@@ -115,12 +126,35 @@ export default function ExplorePage() {
     setZoom(map.getZoom());
   };
 
-  const { clusters, supercluster } = useSupercluster({
-    points,
-    bounds,
-    zoom,
-    options: { radius: 40, maxZoom: 16 },
-  });
+  // after mouse move outside the popup, after 200ms, the popup will be hidden
+  const handleMouseEnterMarker = (location: Location) => {
+    // If there's a timer to hide the popup, cancel it
+    if (hidePopupTimer.current) {
+      clearTimeout(hidePopupTimer.current);
+    }
+    // Show the popup for the hovered marker
+    setPopupInfo(location);
+  };
+
+  const handleMouseLeaveMarker = () => {
+    // When the mouse leaves the marker, schedule the popup to hide after a short delay (e.g., 200ms)
+    hidePopupTimer.current = setTimeout(() => {
+      setPopupInfo(null);
+    }, 200);
+  };
+
+  const handleMouseEnterPopup = () => {
+    // If the mouse enters the popup, it means the user is interacting with it,
+    // so we must cancel any scheduled "hide" action.
+    if (hidePopupTimer.current) {
+      clearTimeout(hidePopupTimer.current);
+    }
+  };
+
+  const handleMouseLeavePopup = () => {
+    // When the mouse leaves the popup, we hide it immediately.
+    setPopupInfo(null);
+  };
 
   if (!mapboxToken) {
     return (
@@ -216,9 +250,9 @@ export default function ExplorePage() {
                     className="inline-block h-4 w-4 bg-blue-500 rounded-full border-2 border-white shadow-md
              focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
                     onMouseEnter={() =>
-                      locationData && setPopupInfo(locationData)
+                      locationData && handleMouseEnterMarker(locationData)
                     }
-                    onMouseLeave={() => setPopupInfo(null)}
+                    onMouseLeave={handleMouseLeaveMarker}
                     onFocus={() => locationData && setPopupInfo(locationData)}
                     onBlur={() => setPopupInfo(null)}
                   />
@@ -233,16 +267,72 @@ export default function ExplorePage() {
                 onClose={() => setPopupInfo(null)}
                 closeOnClick={false}
                 anchor="bottom"
-                offset={40}
+                offset={10}
+                maxWidth="320px"
+                closeButton={false}
               >
-                <div className="p-1">
-                  <h3 className="font-bold">{popupInfo.name}</h3>
-                  <Link
-                    href={`/location/${popupInfo.id}`}
-                    className="text-sm text-blue-600 hover:underline"
-                  >
-                    View Details
-                  </Link>
+                <div
+                  role="tooltip"
+                  onMouseEnter={handleMouseEnterPopup}
+                  onMouseLeave={handleMouseLeavePopup}
+                >
+                  <div className="flex gap-4">
+                    {/* Left side: Image */}
+                    <div className="w-24 flex-shrink-0 relative overflow-hidden rounded">
+                      {popupInfo.image_url ? (
+                        <Image
+                          src={popupInfo.image_url}
+                          alt={popupInfo.name}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-200 rounded flex items-center justify-center">
+                          <span className="text-xs text-gray-500">
+                            No Image
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right side: Details */}
+                    <div className="flex flex-col">
+                      <h3 className="font-bold text-md mb-1">
+                        {popupInfo.name}
+                      </h3>
+                      <div className="flex items-center mb-2">
+                        {popupInfo.avg_rating ? (
+                          <>
+                            {[1, 2, 3, 4, 5].map((starValue) => (
+                              <Star
+                                key={`popup-star-${starValue}`}
+                                className={`h-4 w-4 ${
+                                  starValue <=
+                                  Math.round(Number(popupInfo.avg_rating))
+                                    ? "text-yellow-400 fill-yellow-400"
+                                    : "text-gray-300"
+                                }`}
+                              />
+                            ))}
+                            <span className="ml-2 text-xs text-gray-600">
+                              {Number(popupInfo.avg_rating).toFixed(1)}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-xs text-gray-500">
+                            No reviews yet
+                          </span>
+                        )}
+                      </div>
+                      <Link
+                        href={`/location/${popupInfo.id}`}
+                        className="text-sm text-blue-600 hover:underline mt-auto"
+                      >
+                        View Details
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               </Popup>
             )}
