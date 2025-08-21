@@ -14,22 +14,43 @@ const pool = new Pool({
 const locationRoutes = Router();
 
 // Define the API endpoint: GET /api/locations
+// GET /api/locations - Get all locations with extra preview data
 locationRoutes.get('/locations', async (req: Request, res: Response) => {
-    try {
-        const client = await pool.connect();
-        try {
-            // This query gets all locations from your database
-            const result = await client.query('SELECT id, name, ST_AsText(coordinates) as coords FROM locations');
-            // Send the results back as a JSON response
-            res.status(200).json(result.rows);
-        } finally {
-            // Release the database client back to the pool
-            client.release();
-        }
-    } catch (error) {
-        console.error('Error querying locations', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
+  try {
+      const client = await pool.connect();
+      try {
+          // This advanced query joins locations with their average rating and first image
+          const query = `
+              SELECT
+                  l.id,
+                  l.name,
+                  ST_AsText(l.coordinates) as coords,
+                  -- Subquery to calculate the average rating
+                  (
+                      SELECT AVG(r.rating)
+                      FROM reviews r
+                      WHERE r.location_id = l.id
+                  ) as avg_rating,
+                  -- Subquery to get the URL of the first image
+                  (
+                      SELECT i.url
+                      FROM campground_images i
+                      WHERE i.location_id = l.id
+                      ORDER BY i.created_at
+                      LIMIT 1
+                  ) as image_url
+              FROM
+                  locations l;
+          `;
+          const result = await client.query(query);
+          res.status(200).json(result.rows);
+      } finally {
+          client.release();
+      }
+  } catch (error) {
+      console.error('Error querying locations', error);
+      res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 locationRoutes.post('/locations', authMiddleware, async (req: AuthRequest, res: Response): Promise<any> => {
