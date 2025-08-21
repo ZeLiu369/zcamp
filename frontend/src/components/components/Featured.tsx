@@ -64,11 +64,11 @@ export function Featured() {
                   {camp.province}
                 </CardDescription>
                 <div className="flex items-center mt-4">
-                  {Array.from({ length: 5 }).map((_, i) => (
+                  {[1, 2, 3, 4, 5].map((star) => (
                     <Star
-                      key={`star-${i}-${camp.id}`}
+                      key={`star-${star}-${camp.id}`}
                       className={`h-5 w-5 ${
-                        i < camp.rating
+                        star < camp.rating
                           ? "text-yellow-400 fill-yellow-400"
                           : "text-gray-300"
                       }`}

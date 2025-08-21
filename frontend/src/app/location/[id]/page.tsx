@@ -473,11 +473,11 @@ export default function LocationDetailPage() {
                         <div>
                           <p className="font-semibold">{review.username}</p>
                           <div className="flex items-center">
-                            {Array.from({ length: 5 }).map((_, i) => (
+                            {[1, 2, 3, 4, 5].map((star) => (
                               <Star
-                                key={i}
+                                key={star}
                                 className={`h-4 w-4 ${
-                                  i < review.rating
+                                  star <= review.rating
                                     ? "text-yellow-400 fill-yellow-400"
                                     : "text-gray-300"
                                 }`}
