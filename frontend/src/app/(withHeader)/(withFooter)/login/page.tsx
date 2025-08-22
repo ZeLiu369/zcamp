@@ -14,7 +14,7 @@ import Link from "next/link";
 import { useState, FormEvent } from "react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuth } from "@/context/auth-provider";
 import toast from "react-hot-toast";
 
 export default function LoginPage() {

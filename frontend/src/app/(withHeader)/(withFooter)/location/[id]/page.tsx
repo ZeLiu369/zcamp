@@ -9,7 +9,7 @@ import { Star, Trash2, Pencil, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeepBlueMapPin } from "@/components/icons/MapPin";
 import { ReviewForm } from "@/components/components/ReviewForm";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuth } from "@/context/auth-provider";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {

@@ -9,7 +9,7 @@ import "yet-another-react-lightbox/plugins/thumbnails.css";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuth } from "@/context/auth-provider";
 import Image from "next/image";
 
 interface CampgroundImage {

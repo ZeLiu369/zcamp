@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuth } from "@/context/auth-provider";
 import { useRouter } from "next/navigation";
 import { useState, FormEvent, useEffect, useRef } from "react";
 import "mapbox-gl/dist/mapbox-gl.css";

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { MountainIcon, MenuIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuth } from "@/context/auth-provider";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

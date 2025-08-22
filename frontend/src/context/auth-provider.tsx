@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  createContext,
   useContext,
   useState,
   useEffect,
@@ -11,22 +10,13 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { AuthContext } from "./auth-context";
 
 // The User interface remains the same
 interface User {
   id: string;
   username: string;
 }
-
-// The context type changes: we no longer manage the token directly
-interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<void>; // Login now performs the API call
-  logout: () => Promise<void>; // Logout now performs an API call
-  isLoading: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
