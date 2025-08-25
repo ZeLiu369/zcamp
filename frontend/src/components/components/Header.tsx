@@ -5,10 +5,15 @@ import Link from "next/link";
 import { MountainIcon, MenuIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-provider";
+import { useRouter, usePathname } from "next/navigation";
+import { AddressSearch } from "./AddressSearch";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, logout, isLoading } = useAuth();
+  const pathname = usePathname();
+  const router = useRouter();
+  const [addressQuery, setAddressQuery] = useState("");
 
   const toggleMenu = () => {
     setMobileMenuOpen((open) => !open);
@@ -19,12 +24,34 @@ export function Header() {
     setMobileMenuOpen(false);
   };
 
+  const handleAddressSelect = ({
+    latitude,
+    longitude,
+  }: {
+    latitude: number;
+    longitude: number;
+  }) => {
+    // 我们用新的坐标和缩放级别来构建一个新的 URL
+    const newUrl = `/explore?lng=${longitude}&lat=${latitude}&zoom=14`;
+    router.push(newUrl); // 命令路由器导航到这个新 URL
+  };
+
   return (
     <header className="px-4 lg:px-6 h-14 flex items-center bg-white border-b sticky top-0 z-50">
       <Link href="/" prefetch={false} className="flex items-center">
         <MountainIcon className="h-6 w-6" />
         <span className="sr-only">Campgrounds Inc</span>
       </Link>
+
+      {pathname === "/explore" && (
+        <div className="flex-1 mx-4">
+          <AddressSearch
+            query={addressQuery}
+            setQuery={setAddressQuery}
+            onSelect={handleAddressSelect}
+          />
+        </div>
+      )}
 
       <nav className="ml-auto hidden lg:flex gap-4 sm:gap-6 items-center">
         <Link

@@ -12,6 +12,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import useSupercluster from "use-supercluster";
 import { Star } from "lucide-react";
 import Image from "next/image";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 // Define a type for our location data for TypeScript safety
 type Location = {
@@ -66,6 +67,26 @@ export default function ExplorePage() {
   const [popupInfo, setPopupInfo] = useState<Location | null>(null);
   const hidePopupTimer = useRef<NodeJS.Timeout | null>(null);
 
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const initialLng = searchParams.get("lng")
+    ? Number(searchParams.get("lng"))
+    : -98.5795;
+  const initialLat = searchParams.get("lat")
+    ? Number(searchParams.get("lat"))
+    : 50;
+  const initialZoom = searchParams.get("zoom")
+    ? Number(searchParams.get("zoom"))
+    : 3;
+
+  const [viewport, setViewport] = useState({
+    longitude: initialLng,
+    latitude: initialLat,
+    zoom: initialZoom,
+  });
+
   useEffect(() => {
     async function fetchLocations() {
       try {
@@ -84,6 +105,21 @@ export default function ExplorePage() {
     }
     fetchLocations();
   }, []); // The empty array [] ensures this effect runs only once
+
+  useEffect(() => {
+    const lng = searchParams.get("lng");
+    const lat = searchParams.get("lat");
+    const zoom = searchParams.get("zoom");
+
+    if (lng && lat && zoom && mapRef.current) {
+      // 如果 URL 中有坐标，就命令地图飞过去
+      mapRef.current.flyTo({
+        center: [Number(lng), Number(lat)],
+        zoom: Number(zoom),
+        duration: 2000, // 飞行动画持续时间（毫秒）
+      });
+    }
+  }, [searchParams]); // 依赖项是 searchParams
 
   const points = useMemo(
     () =>
@@ -107,6 +143,33 @@ export default function ExplorePage() {
     zoom,
     options: { radius: 40, maxZoom: 16 },
   });
+
+  const handleMoveEnd = () => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+
+    const mapBounds = map.getBounds();
+    if (!mapBounds) return;
+
+    const { lng, lat } = map.getCenter();
+    const newZoom = map.getZoom();
+
+    // 使用 replace 而不是 push，这样不会在浏览器历史中产生一大堆记录
+    const newUrl = `${pathname}?lng=${lng.toFixed(4)}&lat=${lat.toFixed(
+      4
+    )}&zoom=${newZoom.toFixed(2)}`;
+    router.replace(newUrl, { scroll: false });
+
+    // 更新边界以获取新数据
+    setBounds([
+      mapBounds.getWest(),
+      mapBounds.getSouth(),
+      mapBounds.getEast(),
+      mapBounds.getNorth(),
+    ]);
+
+    setViewport({ longitude: lng, latitude: lat, zoom: newZoom });
+  };
 
   const updateMapState = () => {
     // Use optional chaining `?.` for safety in case the ref isn't ready
@@ -179,10 +242,11 @@ export default function ExplorePage() {
         <Map
           ref={mapRef}
           mapboxAccessToken={mapboxToken}
-          initialViewState={{ longitude: -98.5795, latitude: 50, zoom: 3 }}
+          initialViewState={viewport}
           mapStyle="mapbox://styles/mapbox/streets-v12"
           projection="mercator"
-          onMoveEnd={updateMapState}
+          //onMoveEnd={updateMapState}
+          onMoveEnd={handleMoveEnd}
           onLoad={updateMapState}
         >
           <NavigationControl position="bottom-right" />
