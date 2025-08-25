@@ -219,8 +219,8 @@ export default function ExplorePage() {
           }}
           mapStyle="mapbox://styles/mapbox/streets-v12"
           projection="mercator"
-          //onMoveEnd={updateMapState}
-          onMove={handleMapMove}
+          //onMove={handleMapMove}
+          onMoveEnd={handleMapMove}
           onLoad={handleMapMove}
         >
           <NavigationControl position="bottom-right" />
