@@ -71,22 +71,6 @@ export default function ExplorePage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const initialLng = searchParams.get("lng")
-    ? Number(searchParams.get("lng"))
-    : -98.5795;
-  const initialLat = searchParams.get("lat")
-    ? Number(searchParams.get("lat"))
-    : 50;
-  const initialZoom = searchParams.get("zoom")
-    ? Number(searchParams.get("zoom"))
-    : 3;
-
-  const [viewport, setViewport] = useState({
-    longitude: initialLng,
-    latitude: initialLat,
-    zoom: initialZoom,
-  });
-
   useEffect(() => {
     async function fetchLocations() {
       try {
@@ -144,49 +128,29 @@ export default function ExplorePage() {
     options: { radius: 40, maxZoom: 16 },
   });
 
-  const handleMoveEnd = () => {
+  const handleMapMove = () => {
     const map = mapRef.current?.getMap();
     if (!map) return;
 
     const mapBounds = map.getBounds();
     if (!mapBounds) return;
-
     const { lng, lat } = map.getCenter();
     const newZoom = map.getZoom();
 
-    // 使用 replace 而不是 push，这样不会在浏览器历史中产生一大堆记录
+    // 更新 URL
     const newUrl = `${pathname}?lng=${lng.toFixed(4)}&lat=${lat.toFixed(
       4
     )}&zoom=${newZoom.toFixed(2)}`;
     router.replace(newUrl, { scroll: false });
 
-    // 更新边界以获取新数据
+    // 关键：同时更新 bounds 和 zoom 两个 state
     setBounds([
       mapBounds.getWest(),
       mapBounds.getSouth(),
       mapBounds.getEast(),
       mapBounds.getNorth(),
     ]);
-
-    setViewport({ longitude: lng, latitude: lat, zoom: newZoom });
-  };
-
-  const updateMapState = () => {
-    // Use optional chaining `?.` for safety in case the ref isn't ready
-    const map = mapRef.current?.getMap();
-    if (!map) return;
-
-    const mapBounds = map.getBounds();
-    if (!mapBounds) return;
-
-    // FIX: Manually construct the array to match the tuple type
-    setBounds([
-      mapBounds.getWest(),
-      mapBounds.getSouth(),
-      mapBounds.getEast(),
-      mapBounds.getNorth(),
-    ]);
-    setZoom(map.getZoom());
+    setZoom(newZoom);
   };
 
   // after mouse move outside the popup, after 200ms, the popup will be hidden
@@ -242,12 +206,22 @@ export default function ExplorePage() {
         <Map
           ref={mapRef}
           mapboxAccessToken={mapboxToken}
-          initialViewState={viewport}
+          initialViewState={{
+            longitude: searchParams.get("lng")
+              ? Number(searchParams.get("lng"))
+              : -98.5795,
+            latitude: searchParams.get("lat")
+              ? Number(searchParams.get("lat"))
+              : 50,
+            zoom: searchParams.get("zoom")
+              ? Number(searchParams.get("zoom"))
+              : 3,
+          }}
           mapStyle="mapbox://styles/mapbox/streets-v12"
           projection="mercator"
           //onMoveEnd={updateMapState}
-          onMoveEnd={handleMoveEnd}
-          onLoad={updateMapState}
+          onMove={handleMapMove}
+          onLoad={handleMapMove}
         >
           <NavigationControl position="bottom-right" />
           <GeolocateControl position="bottom-right" />
@@ -276,13 +250,11 @@ export default function ExplorePage() {
                         return; // Exit if anything is missing
                       }
 
-                      const expansionZoom = Math.min(
+                      const expansionZoom =
                         // FIX: Convert cluster.id to a number to match the expected type.
                         supercluster.getClusterExpansionZoom(
                           Number(cluster.id)
-                        ),
-                        20
-                      );
+                        );
 
                       if (mapRef.current) {
                         // Add a safety check for the ref
