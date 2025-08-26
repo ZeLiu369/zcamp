@@ -37,7 +37,7 @@ export function Header() {
   };
 
   return (
-    <header className="px-4 lg:px-6 h-14 flex items-center bg-white border-b sticky top-0 z-50">
+    <header className="px-4 lg:px-6 h-14 flex items-center bg-white border-b sticky top-0 z-40">
       <Link href="/" prefetch={false} className="flex items-center">
         <MountainIcon className="h-6 w-6" />
         <span className="sr-only">Campgrounds Inc</span>

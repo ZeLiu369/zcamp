@@ -81,30 +81,32 @@ export function AddressSearch({
   };
 
   return (
-    <Command className="rounded-lg border shadow-md">
-      <CommandInput
-        placeholder="Type an address..."
-        value={query}
-        onValueChange={handleInputChange}
-      />
-      {isOpen && (
-        <CommandList>
-          {isLoading && <CommandItem>Searching...</CommandItem>}
-          {!isLoading && debouncedQuery.length > 2 && (
-            <CommandEmpty>No results found.</CommandEmpty>
-          )}
-          {!isLoading &&
-            suggestions.map((suggestion) => (
-              <CommandItem
-                key={suggestion.id}
-                onSelect={() => handleSelect(suggestion)}
-                className="cursor-pointer"
-              >
-                {suggestion.place_name}
-              </CommandItem>
-            ))}
-        </CommandList>
-      )}
-    </Command>
+    <div className="relative w-full">
+      <Command className="rounded-lg border shadow-md">
+        <CommandInput
+          placeholder="Type an address..."
+          value={query}
+          onValueChange={handleInputChange}
+        />
+        {isOpen && (
+          <CommandList className="absolute w-full top-10 bg-white rounded-md border shadow-lg z-50">
+            {isLoading && <CommandItem>Searching...</CommandItem>}
+            {!isLoading && debouncedQuery.length > 2 && (
+              <CommandEmpty>No results found.</CommandEmpty>
+            )}
+            {!isLoading &&
+              suggestions.map((suggestion) => (
+                <CommandItem
+                  key={suggestion.id}
+                  onSelect={() => handleSelect(suggestion)}
+                  className="cursor-pointer"
+                >
+                  {suggestion.place_name}
+                </CommandItem>
+              ))}
+          </CommandList>
+        )}
+      </Command>
+    </div>
   );
 }
