@@ -164,35 +164,37 @@ export default function ExplorePage() {
   }, [searchParams]); // 依赖项是 searchParams
 
   // 1. 使用 throttle 限制 handleMapMove 调用频率
-  const handleMapMoveThrottled = useCallback(
-    throttle(() => {
-      const map = mapRef.current?.getMap();
-      if (!map) return;
+  const handleMapMoveThrottled = useMemo(
+    () =>
+      throttle(() => {
+        const map = mapRef.current?.getMap();
+        if (!map) return;
 
-      const mapBounds = map.getBounds();
-      if (!mapBounds) return;
+        const mapBounds = map.getBounds();
+        if (!mapBounds) return;
 
-      // 批量更新状态，减少重新渲染
-      setBounds([
-        mapBounds.getWest(),
-        mapBounds.getSouth(),
-        mapBounds.getEast(),
-        mapBounds.getNorth(),
-      ]);
-      setZoom(map.getZoom());
-    }, 16), // 60fps = 16ms间隔
-    [mapRef]
+        // 批量更新状态，减少重新渲染
+        setBounds([
+          mapBounds.getWest(),
+          mapBounds.getSouth(),
+          mapBounds.getEast(),
+          mapBounds.getNorth(),
+        ]);
+        setZoom(map.getZoom());
+      }, 16), // 60fps = 16ms间隔
+    [mapRef, setBounds, setZoom] // 依赖项决定何时需要重新创建一个新的 throttle 函数
   );
 
-  // 2. 使用 debounce 延迟URL更新
-  const updateUrlDebounced = useCallback(
-    debounce((lng: number, lat: number, zoom: number) => {
-      const newUrl = `${pathname}?lng=${lng.toFixed(4)}&lat=${lat.toFixed(
-        4
-      )}&zoom=${zoom.toFixed(2)}`;
-      router.replace(newUrl, { scroll: false });
-    }, 300), // 300ms 后更新URL
-    [pathname, router] // Dependencies for debounce function
+  // 2. 使用 debounce 延迟URL更新, useMemo is equal to useCallback, just to avoid lint warning
+  const updateUrlDebounced = useMemo(
+    () =>
+      debounce((lng: number, lat: number, zoom: number) => {
+        const newUrl = `${pathname}?lng=${lng.toFixed(4)}&lat=${lat.toFixed(
+          4
+        )}&zoom=${zoom.toFixed(2)}`;
+        router.replace(newUrl, { scroll: false });
+      }, 300),
+    [pathname, router] // 依赖项决定何时需要重新创建一个新的 debounce 函数
   );
 
   // 3. 分离URL更新逻辑
