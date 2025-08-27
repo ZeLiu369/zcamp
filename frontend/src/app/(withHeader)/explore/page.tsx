@@ -8,11 +8,18 @@ import Map, {
   Popup,
 } from "react-map-gl/mapbox";
 import Link from "next/link";
-import { useEffect, useState, useMemo, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
 import useSupercluster from "use-supercluster";
 import { Star } from "lucide-react";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { debounce, throttle } from "lodash";
 
 // Define a type for our location data for TypeScript safety
 type Location = {
@@ -37,6 +44,8 @@ type GeoJsonPoint = {
   };
 };
 
+// Using any for cluster types to avoid complex type conflicts with supercluster library
+
 // A simple utility function to parse the coords string
 function parseCoords(coords: string): [number, number] | null {
   const match = /POINT\(([-\d.]+) ([-\d.]+)\)/.exec(coords);
@@ -53,6 +62,55 @@ function getClusterSizeClasses(pointCount: number): string {
   }
   return "w-12 h-12 text-lg"; // Large
 }
+
+// 6. 优化标记渲染 - 使用 React.memo
+const ClusterMarker = React.memo(
+  ({
+    cluster,
+    longitude,
+    latitude,
+    supercluster,
+    mapRef,
+  }: {
+    cluster: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    longitude: number;
+    latitude: number;
+    supercluster: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    mapRef: React.RefObject<MapRef | null>;
+  }) => {
+    const pointCount = cluster.properties.point_count || 0;
+    const sizeClasses = getClusterSizeClasses(pointCount);
+
+    return (
+      <Marker
+        key={`cluster-${cluster.id}`}
+        latitude={latitude}
+        longitude={longitude}
+      >
+        <button
+          type="button"
+          className={`bg-blue-500 text-white outline-4 font-bold rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 ease-out ${sizeClasses}`}
+          onClick={() => {
+            if (!supercluster || !cluster.id || !mapRef.current) return;
+
+            const expansionZoom = supercluster.getClusterExpansionZoom(
+              Number(cluster.id)
+            );
+            mapRef.current.getMap().easeTo({
+              center: [longitude, latitude],
+              zoom: expansionZoom,
+              duration: 500,
+            });
+          }}
+        >
+          {pointCount}
+        </button>
+      </Marker>
+    );
+  }
+);
+
+ClusterMarker.displayName = "ClusterMarker";
 
 export default function ExplorePage() {
   const mapRef = useRef<MapRef>(null);
@@ -105,53 +163,94 @@ export default function ExplorePage() {
     }
   }, [searchParams]); // 依赖项是 searchParams
 
-  const points = useMemo(
-    () =>
-      locations
-        .map((loc) => {
-          const coords = parseCoords(loc.coords);
-          if (!coords) return null;
-          return {
-            type: "Feature",
-            properties: { cluster: false, locationId: loc.id, name: loc.name },
-            geometry: { type: "Point", coordinates: coords },
-          };
-        })
-        .filter((point): point is GeoJsonPoint => point !== null),
-    [locations]
+  // 1. 使用 throttle 限制 handleMapMove 调用频率
+  const handleMapMoveThrottled = useCallback(
+    throttle(() => {
+      const map = mapRef.current?.getMap();
+      if (!map) return;
+
+      const mapBounds = map.getBounds();
+      if (!mapBounds) return;
+
+      // 批量更新状态，减少重新渲染
+      setBounds([
+        mapBounds.getWest(),
+        mapBounds.getSouth(),
+        mapBounds.getEast(),
+        mapBounds.getNorth(),
+      ]);
+      setZoom(map.getZoom());
+    }, 16), // 60fps = 16ms间隔
+    [mapRef]
   );
 
-  const { clusters, supercluster } = useSupercluster({
-    points,
-    bounds,
-    zoom,
-    options: { radius: 40, maxZoom: 16 },
-  });
+  // 2. 使用 debounce 延迟URL更新
+  const updateUrlDebounced = useCallback(
+    debounce((lng: number, lat: number, zoom: number) => {
+      const newUrl = `${pathname}?lng=${lng.toFixed(4)}&lat=${lat.toFixed(
+        4
+      )}&zoom=${zoom.toFixed(2)}`;
+      router.replace(newUrl, { scroll: false });
+    }, 300), // 300ms 后更新URL
+    [pathname, router] // Dependencies for debounce function
+  );
 
-  const handleMapMove = () => {
+  // 3. 分离URL更新逻辑
+  const handleMapMove = useCallback(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
 
     const mapBounds = map.getBounds();
     if (!mapBounds) return;
+
     const { lng, lat } = map.getCenter();
     const newZoom = map.getZoom();
 
-    // 更新 URL
-    const newUrl = `${pathname}?lng=${lng.toFixed(4)}&lat=${lat.toFixed(
-      4
-    )}&zoom=${newZoom.toFixed(2)}`;
-    router.replace(newUrl, { scroll: false });
+    // 立即更新地图状态（用于聚类）
+    handleMapMoveThrottled();
 
-    // 关键：同时更新 bounds 和 zoom 两个 state
-    setBounds([
-      mapBounds.getWest(),
-      mapBounds.getSouth(),
-      mapBounds.getEast(),
-      mapBounds.getNorth(),
-    ]);
-    setZoom(newZoom);
-  };
+    // 延迟更新URL（不影响渲染性能）
+    updateUrlDebounced(lng, lat, newZoom);
+  }, [handleMapMoveThrottled, updateUrlDebounced]);
+
+  // 4. 优化 points 计算 - 添加依赖检查
+  const points = useMemo(() => {
+    if (locations.length === 0) return [];
+
+    return locations
+      .map((loc) => {
+        const coords = parseCoords(loc.coords);
+        if (!coords) return null;
+        return {
+          type: "Feature",
+          properties: { cluster: false, locationId: loc.id, name: loc.name },
+          geometry: { type: "Point", coordinates: coords },
+        };
+      })
+      .filter((point): point is GeoJsonPoint => point !== null);
+  }, [locations]);
+
+  // 5. 优化 supercluster 配置
+  const { clusters, supercluster } = useSupercluster({
+    points,
+    bounds,
+    zoom,
+    options: {
+      radius: 40,
+      maxZoom: 16,
+      // 添加性能优化选项
+      extent: 512,
+      nodeSize: 64,
+    },
+  });
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      handleMapMoveThrottled.cancel();
+      updateUrlDebounced.cancel();
+    };
+  }, [handleMapMoveThrottled, updateUrlDebounced]);
 
   // after mouse move outside the popup, after 200ms, the popup will be hidden
   const handleMouseEnterMarker = (location: Location) => {
@@ -231,44 +330,15 @@ export default function ExplorePage() {
 
             // If it's a cluster, display the cluster circle
             if ("point_count" in cluster.properties) {
-              const pointCount = cluster.properties.point_count;
-
-              const sizeClasses = getClusterSizeClasses(pointCount);
-
               return (
-                <Marker
+                <ClusterMarker
                   key={`cluster-${cluster.id}`}
-                  latitude={latitude}
+                  cluster={cluster}
                   longitude={longitude}
-                >
-                  <button
-                    type="button" // Good practice to specify the type
-                    className={`bg-blue-500 text-white outline-4 font-bold rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 ease-out ${sizeClasses}`}
-                    // className="w-8 h-8 bg-blue-600 text-white font-bold rounded-full flex items-center justify-center cursor-pointer"
-                    onClick={() => {
-                      if (!supercluster || !cluster.id || !mapRef.current) {
-                        return; // Exit if anything is missing
-                      }
-
-                      const expansionZoom =
-                        // FIX: Convert cluster.id to a number to match the expected type.
-                        supercluster.getClusterExpansionZoom(
-                          Number(cluster.id)
-                        );
-
-                      if (mapRef.current) {
-                        // Add a safety check for the ref
-                        mapRef.current.getMap().easeTo({
-                          center: [longitude, latitude],
-                          zoom: expansionZoom,
-                          duration: 500,
-                        });
-                      }
-                    }}
-                  >
-                    {pointCount}
-                  </button>
-                </Marker>
+                  latitude={latitude}
+                  supercluster={supercluster}
+                  mapRef={mapRef}
+                />
               );
             }
 
