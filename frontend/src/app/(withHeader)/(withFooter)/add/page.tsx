@@ -2,20 +2,18 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/auth-provider";
 import { useRouter } from "next/navigation";
 import { useState, FormEvent, useEffect, useRef } from "react";
 import "mapbox-gl/dist/mapbox-gl.css";
-import Map, { Marker, MapRef } from "react-map-gl/mapbox";
+import Map, {
+  Marker,
+  MapRef,
+  GeolocateControl,
+  NavigationControl,
+} from "react-map-gl/mapbox";
 import { DeepBlueMapPin } from "@/components/icons/MapPin";
 import { AddressSearch } from "@/components/components/AddressSearch";
 import toast from "react-hot-toast";
@@ -112,15 +110,22 @@ export default function AddCampgroundPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-56px)] bg-gray-100 dark:bg-gray-950 px-4 py-12">
-      <Card className="w-full max-w-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl">Add a New Campground</CardTitle>
-          <CardDescription>
-            Search for an address or click on the map to place a pin.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+    // 1. 新的主容器：使用 Flexbox，占据整个屏幕可用高度
+    // h-[calc(100vh-56px)] 假设你的导航栏高度是 56px
+    <div className="flex h-[calc(100vh-56px)] w-screen">
+      {/* 2. 左侧面板：表单区域 */}
+      {/* 在桌面端(md)宽度为 450px，在移动端占据整个宽度 */}
+      {/* overflow-y-auto 保证在内容过多时可以滚动 */}
+      <div className="w-full md:w-[450px] flex-shrink-0 bg-white dark:bg-gray-900 p-8 overflow-y-auto">
+        <div className="w-full max-w-md mx-auto">
+          {" "}
+          {/* 保持内容居中和最大宽度，防止在超宽面板里拉伸 */}
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold">Add a New Campground</h1>
+            <p className="text-gray-500 dark:text-gray-400">
+              Search for an address or click on the map to place a pin.
+            </p>
+          </div>
           <form onSubmit={handleSubmit} className="grid gap-6">
             <div className="grid gap-2">
               <Label htmlFor="name">Campground Name</Label>
@@ -142,36 +147,40 @@ export default function AddCampgroundPage() {
               />
             </div>
 
-            {/* 交互式地图 */}
-            <div className="h-96 w-full rounded-md overflow-hidden border">
-              <Map
-                ref={mapRef}
-                mapboxAccessToken={mapboxToken}
-                initialViewState={{
-                  longitude: -98.5795,
-                  latitude: 50,
-                  zoom: 3,
-                }}
-                mapStyle="mapbox://styles/mapbox/streets-v12"
-                onClick={handleMapClick} // 现在这个函数会调用 API
-              >
-                {newPin && (
-                  <Marker
-                    longitude={newPin.longitude}
-                    latitude={newPin.latitude}
-                  >
-                    <DeepBlueMapPin className="h-10 w-10 hover:scale-110 transition-transform cursor-pointer drop-shadow-md" />
-                  </Marker>
-                )}
-              </Map>
-            </div>
+            {/* 地图现在从表单中移除了 */}
 
             <Button type="submit" className="w-full">
               Add Campground
             </Button>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      {/* 3. 右侧面板：地图区域 */}
+      {/* flex-grow 会让这个 div 占据所有剩余的可用空间 */}
+      <div className="flex-grow h-full">
+        {/* 我们把地图放在这里，并确保它占满整个右侧面板 */}
+        <Map
+          ref={mapRef}
+          mapboxAccessToken={mapboxToken}
+          initialViewState={{
+            longitude: -98.5795,
+            latitude: 50,
+            zoom: 3,
+          }}
+          mapStyle="mapbox://styles/mapbox/streets-v12"
+          onClick={handleMapClick}
+          projection="mercator"
+        >
+          <NavigationControl position="bottom-right" />
+          <GeolocateControl position="bottom-right" />
+          {newPin && (
+            <Marker longitude={newPin.longitude} latitude={newPin.latitude}>
+              <DeepBlueMapPin className="h-10 w-10 hover:scale-110 transition-transform cursor-pointer drop-shadow-md" />
+            </Marker>
+          )}
+        </Map>
+      </div>
     </div>
   );
 }
