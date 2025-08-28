@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "@/app/globals.css";
 import { AuthProvider } from "@/context/auth-provider";
 import { Toaster } from "react-hot-toast";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

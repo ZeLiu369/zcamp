@@ -237,7 +237,7 @@ export default function AddCampgroundPage() {
       - 移动端 (默认): 保持 h-96 的固定高度。
       - 桌面端 (md:): 恢复 flex-grow 并让高度自适应。
     */}
-      <div className="w-full h-96 flex-shrink-0 md:h-auto md:flex-grow">
+      <div className="relative w-full h-96 md:h-[calc(100vh-56px)] md:flex-1">
         <Map
           ref={mapRef}
           mapboxAccessToken={mapboxToken}
@@ -249,6 +249,7 @@ export default function AddCampgroundPage() {
           mapStyle="mapbox://styles/mapbox/streets-v12"
           onClick={handleMapClick}
           projection="mercator"
+          style={{ width: "100%", height: "100%" }}
         >
           <NavigationControl position="bottom-right" />
           <GeolocateControl position="bottom-right" />
