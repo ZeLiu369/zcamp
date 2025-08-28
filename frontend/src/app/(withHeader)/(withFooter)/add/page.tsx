@@ -17,6 +17,7 @@ import Map, {
 import { DeepBlueMapPin } from "@/components/icons/MapPin";
 import { AddressSearch } from "@/components/components/AddressSearch";
 import toast from "react-hot-toast";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface NewPin {
   latitude: number;
@@ -27,46 +28,69 @@ export default function AddCampgroundPage() {
   const [name, setName] = useState("");
   const [newPin, setNewPin] = useState<NewPin | null>(null);
   const [addressQuery, setAddressQuery] = useState("");
+  const [latInput, setLatInput] = useState("");
+  const [lngInput, setLngInput] = useState("");
+
+  // 使用 debounce 来防止频繁更新地图
+  const debouncedLat = useDebounce(latInput, 500);
+  const debouncedLng = useDebounce(lngInput, 500);
 
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
   const mapRef = useRef<MapRef>(null);
 
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push("/login");
-    }
-  }, [isLoading, user, router]);
-
-  const handleAddressSelect = (coords: NewPin) => {
-    setNewPin(coords);
-    // Fly the map to the selected location
-    mapRef.current?.flyTo({
-      center: [coords.longitude, coords.latitude],
-      zoom: 14,
-    });
-  };
-
-  const handleMapClick = async (event: mapboxgl.MapMouseEvent) => {
-    const { lng, lat } = event.lngLat;
-    setNewPin({ longitude: lng, latitude: lat });
-
+  const reverseGeocode = async (lng: number, lat: number) => {
     try {
       const response = await fetch(
         `http://localhost:3002/api/reverse-geocode?longitude=${lng}&latitude=${lat}`
       );
       const data = await response.json();
       if (response.ok) {
-        // update the address search box text
         setAddressQuery(data.place_name);
       } else {
-        setAddressQuery("Address not found");
+        setAddressQuery("Address not found for these coordinates");
       }
     } catch (error) {
       console.error("Reverse geocoding failed", error);
       setAddressQuery("Could not fetch address");
     }
+  };
+
+  const handleMapClick = async (event: mapboxgl.MapMouseEvent) => {
+    const { lng, lat } = event.lngLat;
+    setNewPin({ longitude: lng, latitude: lat });
+
+    setLatInput(lat.toFixed(6));
+    setLngInput(lng.toFixed(6));
+    reverseGeocode(lng, lat);
+
+    // try {
+    //   const response = await fetch(
+    //     `http://localhost:3002/api/reverse-geocode?longitude=${lng}&latitude=${lat}`
+    //   );
+    //   const data = await response.json();
+    //   if (response.ok) {
+    //     // update the address search box text
+    //     setAddressQuery(data.place_name);
+    //   } else {
+    //     setAddressQuery("Address not found");
+    //   }
+    // } catch (error) {
+    //   console.error("Reverse geocoding failed", error);
+    //   setAddressQuery("Could not fetch address");
+    // }
+  };
+
+  const handleAddressSelect = (coords: NewPin) => {
+    setNewPin(coords);
+    setLatInput(coords.latitude.toFixed(6));
+    setLngInput(coords.longitude.toFixed(6));
+    // Fly the map to the selected location
+    mapRef.current?.flyTo({
+      center: [coords.longitude, coords.latitude],
+      zoom: 14,
+    });
   };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -113,6 +137,23 @@ export default function AddCampgroundPage() {
     }
   };
 
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/login");
+    }
+  }, [isLoading, user, router]);
+
+  useEffect(() => {
+    const lat = parseFloat(debouncedLat);
+    const lng = parseFloat(debouncedLng);
+
+    if (!isNaN(lat) && !isNaN(lng)) {
+      setNewPin({ latitude: lat, longitude: lng });
+      mapRef.current?.flyTo({ center: [lng, lat], zoom: 14 });
+      reverseGeocode(lng, lat);
+    }
+  }, [debouncedLat, debouncedLng]);
+
   if (isLoading || !user) {
     return <div>Loading...</div>;
   }
@@ -153,6 +194,29 @@ export default function AddCampgroundPage() {
                 setQuery={setAddressQuery}
                 onSelect={handleAddressSelect}
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="latitude">Latitude</Label>
+                <Input
+                  id="latitude"
+                  type="number"
+                  placeholder="e.g., 47.564"
+                  value={latInput}
+                  onChange={(e) => setLatInput(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="longitude">Longitude</Label>
+                <Input
+                  id="longitude"
+                  type="number"
+                  placeholder="e.g., -52.709"
+                  value={lngInput}
+                  onChange={(e) => setLngInput(e.target.value)}
+                />
+              </div>
             </div>
 
             {/* 地图现在从表单中移除了 */}
