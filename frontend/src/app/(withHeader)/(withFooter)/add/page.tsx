@@ -28,9 +28,6 @@ interface NewPin {
 export default function AddCampgroundPage() {
   const [name, setName] = useState("");
   const [newPin, setNewPin] = useState<NewPin | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-
   const [addressQuery, setAddressQuery] = useState("");
 
   const { user, isLoading } = useAuth();
@@ -76,12 +73,10 @@ export default function AddCampgroundPage() {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    setError(null);
-    setSuccess(null);
 
     // check if the user has selected a location on the map
     if (!newPin) {
-      setError("Please select a location on the map.");
+      toast.error("Please select a location on the map.");
       return;
     }
 
@@ -104,17 +99,11 @@ export default function AddCampgroundPage() {
         throw new Error(data.error || "Failed to add campground.");
 
       toast.success(`Successfully added "${data.name}"!`);
-
-      setSuccess(`Successfully added ${data.name}!`);
       setName("");
       setNewPin(null); // 提交成功后清空图钉
     } catch (err: unknown) {
       toast.error("Oops! Something went wrong.");
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError(String(err));
-      }
+      console.error(err);
     }
   };
 
