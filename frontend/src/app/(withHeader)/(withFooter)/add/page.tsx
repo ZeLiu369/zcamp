@@ -99,6 +99,14 @@ export default function AddCampgroundPage() {
       toast.success(`Successfully added "${data.name}"!`);
       setName("");
       setNewPin(null); // 提交成功后清空图钉
+
+      // 1. 从返回的数据中获取新创建的露营地的 ID
+      const newLocationId = data.id;
+
+      // 2. 在短暂延迟后，使用 router 跳转到新的详情页面
+      setTimeout(() => {
+        router.push(`/location/${newLocationId}`);
+      }, 1500); // 1.5秒延迟，让用户可以看到成功消息
     } catch (err: unknown) {
       toast.error("Oops! Something went wrong.");
       console.error(err);
