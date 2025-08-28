@@ -130,47 +130,6 @@ export default function ExplorePage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  useEffect(() => {
-    async function fetchLocations() {
-      try {
-        const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations`;
-        console.log(`Fetching from: ${apiUrl}`);
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-          throw new Error("Failed to fetch locations");
-        }
-        const data: Location[] = await response.json();
-        setLocations(data);
-        console.log(`Fetched ${data.length} locations.`);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-    fetchLocations();
-  }, []); // The empty array [] ensures this effect runs only once
-
-  useEffect(() => {
-    const lng = searchParams.get("lng");
-    const lat = searchParams.get("lat");
-    const zoom = searchParams.get("zoom");
-
-    if (isUserInteraction.current) {
-      isUserInteraction.current = false; // 重置标志位
-      return;
-    }
-
-    if (lng && lat && zoom && mapRef.current) {
-      console.log("flyTo called");
-
-      // 如果 URL 中有坐标，就命令地图飞过去
-      mapRef.current.flyTo({
-        center: [Number(lng), Number(lat)],
-        zoom: Number(zoom),
-        duration: 2000, // 飞行动画持续时间（毫秒）
-      });
-    }
-  }, [searchParams]); // 依赖项是 searchParams
-
   // 1. 使用 throttle 限制 handleMapMove 调用频率
   const handleMapMoveThrottled = useMemo(
     () =>
@@ -257,14 +216,6 @@ export default function ExplorePage() {
     },
   });
 
-  // 清理定时器
-  useEffect(() => {
-    return () => {
-      handleMapMoveThrottled.cancel();
-      updateUrlDebounced.cancel();
-    };
-  }, [handleMapMoveThrottled, updateUrlDebounced]);
-
   // after mouse move outside the popup, after 200ms, the popup will be hidden
   const handleMouseEnterMarker = (location: Location) => {
     // If there's a timer to hide the popup, cancel it
@@ -294,6 +245,55 @@ export default function ExplorePage() {
     // When the mouse leaves the popup, we hide it immediately.
     setPopupInfo(null);
   };
+
+  useEffect(() => {
+    async function fetchLocations() {
+      try {
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations`;
+        console.log(`Fetching from: ${apiUrl}`);
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error("Failed to fetch locations");
+        }
+        const data: Location[] = await response.json();
+        setLocations(data);
+        console.log(`Fetched ${data.length} locations.`);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    fetchLocations();
+  }, []); // The empty array [] ensures this effect runs only once
+
+  useEffect(() => {
+    const lng = searchParams.get("lng");
+    const lat = searchParams.get("lat");
+    const zoom = searchParams.get("zoom");
+
+    if (isUserInteraction.current) {
+      isUserInteraction.current = false; // 重置标志位
+      return;
+    }
+
+    if (lng && lat && zoom && mapRef.current) {
+      console.log("flyTo called");
+
+      // 如果 URL 中有坐标，就命令地图飞过去
+      mapRef.current.flyTo({
+        center: [Number(lng), Number(lat)],
+        zoom: Number(zoom),
+        duration: 2000, // 飞行动画持续时间（毫秒）
+      });
+    }
+  }, [searchParams]); // 依赖项是 searchParams
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      handleMapMoveThrottled.cancel();
+      updateUrlDebounced.cancel();
+    };
+  }, [handleMapMoveThrottled, updateUrlDebounced]);
 
   if (!mapboxToken) {
     return (
