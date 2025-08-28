@@ -154,27 +154,31 @@ export default function AddCampgroundPage() {
     }
   }, [debouncedLat, debouncedLng]);
 
+  // ... 你组件中所有的 hooks 和函数保持不变 ...
+
   if (isLoading || !user) {
     return <div>Loading...</div>;
   }
 
   return (
-    // 1. 新的主容器：使用 Flexbox，占据整个屏幕可用高度
-    // h-[calc(100vh-56px)] 假设你的导航栏高度是 56px
-    <div className="flex h-[calc(100vh-56px)] w-screen">
-      {/* 2. 左侧面板：表单区域 */}
-      {/* 在桌面端(md)宽度为 450px，在移动端占据整个宽度 */}
-      {/* overflow-y-auto 保证在内容过多时可以滚动 */}
-      <div className="w-full md:w-[450px] flex-shrink-0 bg-white dark:bg-gray-900 p-8 overflow-y-auto">
-        <div className="w-full max-w-md mx-auto">
-          {" "}
-          {/* 保持内容居中和最大宽度，防止在超宽面板里拉伸 */}
+    // 1. 主容器：
+    // - 移动端 (默认): 高度是 min-h-[...]，意味着它可以被内容撑得更高，允许页面滚动。
+    // - 桌面端 (md:): 高度变为固定的 h-[...]，内容将被限制在这个容器内。
+    <div className="flex flex-col md:flex-row min-h-[calc(100vh-56px)] md:h-[calc(100vh-56px)] w-screen">
+      {/* 2. 左侧/顶部面板：表单区域 */}
+      {/*
+      - 移动端 (默认): 高度自适应，不再需要滚动条，因为它会把主容器往下推。
+      - 桌面端 (md:): 因为主容器高度固定了，所以这里需要 overflow-y-auto 来处理内容过长的情况。
+    */}
+      <div className="w-full md:w-[450px] flex-shrink-0 bg-white dark:bg-gray-900 md:overflow-y-auto">
+        <div className="w-full max-w-md mx-auto p-8">
           <div className="mb-8">
             <h1 className="text-2xl font-bold">Add a New Campground</h1>
             <p className="text-gray-500 dark:text-gray-400">
               Search for an address or click on the map to place a pin.
             </p>
           </div>
+
           <form onSubmit={handleSubmit} className="grid gap-6">
             <div className="grid gap-2">
               <Label htmlFor="name">Campground Name</Label>
@@ -228,10 +232,12 @@ export default function AddCampgroundPage() {
         </div>
       </div>
 
-      {/* 3. 右侧面板：地图区域 */}
-      {/* flex-grow 会让这个 div 占据所有剩余的可用空间 */}
-      <div className="flex-grow h-full">
-        {/* 我们把地图放在这里，并确保它占满整个右侧面板 */}
+      {/* 3. 右侧/底部面板：地图区域 */}
+      {/*
+      - 移动端 (默认): 保持 h-96 的固定高度。
+      - 桌面端 (md:): 恢复 flex-grow 并让高度自适应。
+    */}
+      <div className="w-full h-96 flex-shrink-0 md:h-auto md:flex-grow">
         <Map
           ref={mapRef}
           mapboxAccessToken={mapboxToken}
