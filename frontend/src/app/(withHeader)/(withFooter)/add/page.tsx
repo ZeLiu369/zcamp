@@ -18,6 +18,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import Map, { Marker, MapRef } from "react-map-gl/mapbox";
 import { DeepBlueMapPin } from "@/components/icons/MapPin";
 import { AddressSearch } from "@/components/components/AddressSearch";
+import toast from "react-hot-toast";
 
 interface NewPin {
   latitude: number;
@@ -102,10 +103,13 @@ export default function AddCampgroundPage() {
       if (!response.ok)
         throw new Error(data.error || "Failed to add campground.");
 
+      toast.success(`Successfully added "${data.name}"!`);
+
       setSuccess(`Successfully added ${data.name}!`);
       setName("");
       setNewPin(null); // 提交成功后清空图钉
     } catch (err: unknown) {
+      toast.error("Oops! Something went wrong.");
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -176,12 +180,6 @@ export default function AddCampgroundPage() {
             <Button type="submit" className="w-full">
               Add Campground
             </Button>
-            {success && (
-              <p className="text-sm text-green-500 text-center">{success}</p>
-            )}
-            {error && (
-              <p className="text-sm text-red-500 text-center">{error}</p>
-            )}
           </form>
         </CardContent>
       </Card>
