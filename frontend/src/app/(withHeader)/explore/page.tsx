@@ -113,6 +113,7 @@ const ClusterMarker = React.memo(
 ClusterMarker.displayName = "ClusterMarker";
 
 export default function ExplorePage() {
+  const isUserInteraction = useRef(false);
   const mapRef = useRef<MapRef>(null);
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
@@ -153,7 +154,14 @@ export default function ExplorePage() {
     const lat = searchParams.get("lat");
     const zoom = searchParams.get("zoom");
 
+    if (isUserInteraction.current) {
+      isUserInteraction.current = false; // 重置标志位
+      return;
+    }
+
     if (lng && lat && zoom && mapRef.current) {
+      console.log("flyTo called");
+
       // 如果 URL 中有坐标，就命令地图飞过去
       mapRef.current.flyTo({
         center: [Number(lng), Number(lat)],
@@ -189,6 +197,7 @@ export default function ExplorePage() {
   const updateUrlDebounced = useMemo(
     () =>
       debounce((lng: number, lat: number, zoom: number) => {
+        isUserInteraction.current = true;
         const newUrl = `${pathname}?lng=${lng.toFixed(4)}&lat=${lat.toFixed(
           4
         )}&zoom=${zoom.toFixed(2)}`;
@@ -199,6 +208,8 @@ export default function ExplorePage() {
 
   // 3. 分离URL更新逻辑
   const handleMapMove = useCallback(() => {
+    console.log("handleMapMove called");
+
     const map = mapRef.current?.getMap();
     if (!map) return;
 
