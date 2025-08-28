@@ -34,7 +34,7 @@ apiRoutes.get('/geocode', async (req: Request, res: Response): Promise<any> => {
             params: {
                 access_token: mapboxToken,
                 autocomplete: true,
-                country: 'US,CA', // Limit results to the US and Canada
+                // country: 'US,CA', // Limit results to the US and Canada
                 limit: 5, // Get up to 5 suggestions
             }
         });
