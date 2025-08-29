@@ -54,7 +54,7 @@ export default function EditCampgroundPage() {
   const reverseGeocode = async (lng: number, lat: number) => {
     try {
       const response = await fetch(
-        `http://localhost:3002/api/reverse-geocode?longitude=${lng}&latitude=${lat}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reverse-geocode?longitude=${lng}&latitude=${lat}`
       );
       if (!response.ok) return;
       const data = await response.json();
@@ -69,7 +69,7 @@ export default function EditCampgroundPage() {
     async function fetchLocation() {
       try {
         const response = await fetch(
-          `http://localhost:3002/api/locations/${id}`
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations/${id}`
         );
         if (!response.ok) throw new Error("Failed to fetch location data.");
         const data: LocationData = await response.json();
@@ -148,7 +148,7 @@ export default function EditCampgroundPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:3002/api/locations/${id}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations/${id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -165,8 +165,9 @@ export default function EditCampgroundPage() {
 
       toast.success("Campground updated successfully!");
       router.push(`/location/${id}`);
-    } catch (err: any) {
-      toast.error(err.message || "Oops! Something went wrong.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Oops! Something went wrong.");
     }
   };
 

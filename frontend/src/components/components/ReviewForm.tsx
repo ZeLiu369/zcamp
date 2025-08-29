@@ -31,14 +31,17 @@ export function ReviewForm({ locationId, onReviewSubmit }: ReviewFormProps) {
     }
 
     try {
-      const response = await fetch("http://localhost:3002/api/reviews", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ rating, comment, locationId }),
-        credentials: "include",
-      });
+      const response = await fetch(
+        "${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reviews",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ rating, comment, locationId }),
+          credentials: "include",
+        }
+      );
 
       const data = await response.json();
       if (!response.ok) {

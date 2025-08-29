@@ -29,7 +29,9 @@ export default function PhotosPage() {
 
   const fetchLocationData = async () => {
     try {
-      const response = await fetch(`http://localhost:3002/api/locations/${id}`);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations/${id}`
+      );
       if (!response.ok) throw new Error("Failed to fetch location data.");
       const data = await response.json();
       setLocation(data);
@@ -49,10 +51,13 @@ export default function PhotosPage() {
   const handleDeleteImage = async (imageId: string) => {
     if (!user) return;
     if (confirm("Are you sure you want to delete this image?")) {
-      await fetch(`http://localhost:3002/api/images/${imageId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/images/${imageId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
       fetchLocationData(); // Refetch after deletion
     }
   };

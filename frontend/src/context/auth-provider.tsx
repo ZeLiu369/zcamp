@@ -31,9 +31,12 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const checkAuthStatus = useCallback(async () => {
     try {
       // Get all information about the user, campgrounds, and reviews, username...
-      const response = await fetch("http://localhost:3002/api/profile/me", {
-        credentials: "include", // IMPORTANT: This tells fetch to send cookies
-      });
+      const response = await fetch(
+        "${process.env.NEXT_PUBLIC_API_BASE_URL}/api/profile/me",
+        {
+          credentials: "include", // IMPORTANT: This tells fetch to send cookies
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -58,12 +61,15 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const login = useCallback(
     async (email: string, password: string): Promise<void> => {
       try {
-        const response = await fetch("http://localhost:3002/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-          credentials: "include", // IMPORTANT: Needed for the backend to set the cookie
-        });
+        const response = await fetch(
+          "${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/login",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+            credentials: "include", // IMPORTANT: Needed for the backend to set the cookie
+          }
+        );
 
         if (!response.ok) {
           const data = await response.json();
@@ -84,7 +90,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const logout = useCallback(async () => {
     setIsLoading(true); // A. Start loading state
     try {
-      await fetch("http://localhost:3002/api/auth/logout", {
+      await fetch("${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/logout", {
         method: "POST",
         credentials: "include",
       });

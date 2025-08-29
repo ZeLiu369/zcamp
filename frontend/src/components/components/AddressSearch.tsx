@@ -45,9 +45,9 @@ export function AddressSearch({
       setIsLoading(true);
       try {
         const response = await fetch(
-          `http://localhost:3002/api/geocode?query=${encodeURIComponent(
-            debouncedQuery
-          )}`
+          `${
+            process.env.NEXT_PUBLIC_API_BASE_URL
+          }/api/geocode?query=${encodeURIComponent(debouncedQuery)}`
         );
         const data = await response.json();
         setSuggestions(data);

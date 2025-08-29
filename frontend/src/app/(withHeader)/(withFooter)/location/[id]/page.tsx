@@ -80,7 +80,9 @@ export default function LocationDetailPage() {
     console.log("fetchLocationDetail");
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3002/api/locations/${id}`);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations/${id}`
+      );
       if (!response.ok) {
         throw new Error("Location not found");
       }
@@ -115,7 +117,7 @@ export default function LocationDetailPage() {
     ) {
       try {
         const response = await fetch(
-          `http://localhost:3002/api/reviews/${reviewId}`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reviews/${reviewId}`,
           {
             method: "DELETE",
             credentials: "include",
@@ -150,7 +152,7 @@ export default function LocationDetailPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:3002/api/reviews/${editingReview.id}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reviews/${editingReview.id}`,
         {
           method: "PUT",
           headers: {
@@ -192,7 +194,7 @@ export default function LocationDetailPage() {
     ) {
       try {
         const response = await fetch(
-          `http://localhost:3002/api/locations/${location?.id}`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations/${location?.id}`,
           {
             method: "DELETE",
             credentials: "include",
@@ -268,7 +270,7 @@ export default function LocationDetailPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:3002/api/locations/${id}/images`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations/${id}/images`,
         {
           method: "POST",
           credentials: "include",
@@ -307,7 +309,7 @@ export default function LocationDetailPage() {
     if (confirm("Are you sure you want to delete this image?")) {
       try {
         const response = await fetch(
-          `http://localhost:3002/api/images/${imageId}`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/images/${imageId}`,
           {
             method: "DELETE",
             credentials: "include", // Use this for cookie-based auth

@@ -33,13 +33,16 @@ export default function SignUpPage() {
 
     try {
       // Step 3: Send the form data to your backend API
-      const response = await fetch("http://localhost:3002/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, email, password }),
-      });
+      const response = await fetch(
+        "${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ username, email, password }),
+        }
+      );
 
       const data = await response.json();
 

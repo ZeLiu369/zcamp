@@ -43,7 +43,7 @@ export default function AddCampgroundPage() {
   const reverseGeocode = async (lng: number, lat: number) => {
     try {
       const response = await fetch(
-        `http://localhost:3002/api/reverse-geocode?longitude=${lng}&latitude=${lat}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reverse-geocode?longitude=${lng}&latitude=${lat}`
       );
       const data = await response.json();
       if (response.ok) {
@@ -67,7 +67,7 @@ export default function AddCampgroundPage() {
 
     // try {
     //   const response = await fetch(
-    //     `http://localhost:3002/api/reverse-geocode?longitude=${lng}&latitude=${lat}`
+    //     `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reverse-geocode?longitude=${lng}&latitude=${lat}`
     //   );
     //   const data = await response.json();
     //   if (response.ok) {
@@ -103,18 +103,21 @@ export default function AddCampgroundPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:3002/api/locations", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          latitude: newPin.latitude,
-          longitude: newPin.longitude,
-        }),
-        credentials: "include",
-      });
+      const response = await fetch(
+        "${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            latitude: newPin.latitude,
+            longitude: newPin.longitude,
+          }),
+          credentials: "include",
+        }
+      );
 
       const data = await response.json();
       if (!response.ok)

@@ -44,9 +44,12 @@ export default function ProfilePage() {
     if (user) {
       async function fetchProfile() {
         try {
-          const response = await fetch("http://localhost:3002/api/profile/me", {
-            credentials: "include",
-          });
+          const response = await fetch(
+            "${process.env.NEXT_PUBLIC_API_BASE_URL}/api/profile/me",
+            {
+              credentials: "include",
+            }
+          );
           if (!response.ok) throw new Error("Failed to fetch profile.");
           const data = await response.json();
           setProfileData(data);
