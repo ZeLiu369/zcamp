@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     try {
       // Get all information about the user, campgrounds, and reviews, username...
       const response = await fetch(
-        "${process.env.NEXT_PUBLIC_API_BASE_URL}/api/profile/me",
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/profile/me`,
         {
           credentials: "include", // IMPORTANT: This tells fetch to send cookies
         }
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     async (email: string, password: string): Promise<void> => {
       try {
         const response = await fetch(
-          "${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/login",
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/login`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const logout = useCallback(async () => {
     setIsLoading(true); // A. Start loading state
     try {
-      await fetch("${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/logout", {
+      await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/logout`, {
         method: "POST",
         credentials: "include",
       });

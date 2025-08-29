@@ -32,7 +32,7 @@ export function ReviewForm({ locationId, onReviewSubmit }: ReviewFormProps) {
 
     try {
       const response = await fetch(
-        "${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reviews",
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reviews`,
         {
           method: "POST",
           headers: {
