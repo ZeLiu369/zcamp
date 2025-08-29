@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation"; // Import the router for redirection
+import { Eye, EyeOff } from "lucide-react";
 
 export default function SignUpPage() {
   // Step 1: Create state variables to hold the form data and any messages
@@ -23,6 +24,7 @@ export default function SignUpPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const router = useRouter(); // Initialize the router
+  const [showPassword, setShowPassword] = useState(false);
 
   // Step 2: Create a function to handle the form submission
   const handleSubmit = async (event: FormEvent) => {
@@ -102,15 +104,24 @@ export default function SignUpPage() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-2 relative">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="pr-10"
               />
+              <button
+                type="button" // Important: type="button" prevents form submission
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-[28px] h-5 w-5 text-gray-500 hover:text-gray-700"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff /> : <Eye />}
+              </button>
             </div>
             <Button type="submit" className="w-full">
               Create an account
