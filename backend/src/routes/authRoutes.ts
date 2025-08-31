@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
+import { emailService } from '#/services/emailService.js'; 
 
 // Re-using the same pool configuration
 const pool = new Pool({
@@ -19,49 +20,60 @@ const authRoutes = Router();
 authRoutes.post('/register', async (req: Request, res: Response): Promise<any> => {
     const { username, email, password } = req.body;
 
-    // Basic validation
     if (!username || !email || !password) {
         return res.status(400).json({ error: 'Username, email, and password are required.' });
     }
 
+    const client = await pool.connect();
     try {
+        await client.query('BEGIN');
+
         // Step 1: Hash the password
         const salt = await bcrypt.genSalt(10);
         const password_hash = await bcrypt.hash(password, salt);
 
-        // Step 2: Save the new user to the database
-        const client = await pool.connect();
-        try {
-            const insertQuery = `
-                INSERT INTO users (username, email, password_hash)
-                VALUES ($1, $2, $3)
-                RETURNING id, username, email, created_at;
-            `;
-            const values = [username, email, password_hash];
-            const result = await client.query(insertQuery, values);
-            const newUser = result.rows[0];
+        // Step 2: Generate a verification token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationTokenExpiresAt = new Date(Date.now() + 24 * 3600000); // Expires in 24 hours
 
-            // Step 3: Send a success response
-            // We don't send the password hash back to the client
-            res.status(201).json({ 
-                message: 'User created successfully!',
-                user: newUser 
-            });
+        // Step 3: Save the new user to the database with the token
+        const insertQuery = `
+            INSERT INTO users (username, email, password_hash, verification_token, verification_token_expires_at)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id, username, email;
+        `;
+        const values = [username, email, password_hash, verificationToken, verificationTokenExpiresAt];
+        const result = await client.query(insertQuery, values);
+        const newUser = result.rows[0];
 
-        } catch (dbError: any) {
-            // Handle potential database errors, like a duplicate username or email
-            if (dbError.code === '23505') { // Unique violation error code
-                return res.status(409).json({ error: 'Username or email already exists.' });
-            }
-            throw dbError; // Re-throw other errors
-        } finally {
-            client.release();
+        // Step 4: Send the verification email
+        const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+        await emailService.sendEmail({
+            to: email,
+            subject: 'Verify Your Email for CampFinder',
+            html: `<p>Welcome to CampFinder! Please click the link below to verify your email address:</p><p><a href="${verificationLink}">${verificationLink}</a></p>`,
+        });
+
+        await client.query('COMMIT');
+
+        // Step 5: Send a success response
+        res.status(201).json({ 
+            message: 'User created successfully! Please check your email to verify your account.',
+            user: newUser 
+        });
+
+    } catch (dbError: any) {
+        await client.query('ROLLBACK');
+        if (dbError.code === '23505') {
+            return res.status(409).json({ error: 'Username or email already exists.' });
         }
-    } catch (error) {
-        console.error('Error during registration:', error);
+        console.error('Error during registration:', dbError);
         res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
     }
 });
+
 
 
 authRoutes.post('/login', async (req: Request, res: Response): Promise<any> => {
@@ -179,15 +191,9 @@ authRoutes.post('/forgot-password', async (req: Request, res: Response): Promise
             },
         });
         
-        const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
-        
-        // Send the email
-        await transport.sendMail({
-            from: '"CampFinder Support" <support@campfinder.com>',
-            to: email,
-            subject: 'Your Password Reset Link',
-            html: `<p>Please click the following link to reset your password:</p><p><a href="${resetLink}">${resetLink}</a></p>`,
-        });
+        const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+
+        await emailService.sendPasswordResetEmail(email, resetLink);
 
         res.status(200).json({ message: 'If a user with that email exists, a reset link has been sent.' });
 

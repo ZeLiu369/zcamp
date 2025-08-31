@@ -12,16 +12,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, FormEvent } from "react";
+import toast from "react-hot-toast";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    setMessage("");
-    setError("");
+    setIsLoading(true);
 
     try {
       const response = await fetch(
@@ -34,15 +33,23 @@ export default function ForgotPasswordPage() {
       );
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Something went wrong.");
 
-      setMessage(data.message);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
+      // 无论成功与否，后端都会返回 200 OK
+      // 所以我们直接显示后端返回的消息
+      if (response.ok) {
+        // 2. 显示一个成功的 toast 消息
+        toast.success(data.message);
+        setEmail(""); // 成功后清空输入框
       } else {
-        setError(String(err));
+        // 如果后端返回错误（例如 500），则显示错误消息
+        throw new Error(data.error || "Something went wrong.");
       }
+    } catch (error) {
+      console.log(error);
+      // 3. 显示一个错误的 toast 消息
+      toast.error("Oops! Something went wrong.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -66,17 +73,12 @@ export default function ForgotPasswordPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
               />
             </div>
-            <Button type="submit" className="w-full">
-              Send Reset Link
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Sending..." : "Send Reset Link"}
             </Button>
-            {message && (
-              <p className="text-sm text-green-500 text-center">{message}</p>
-            )}
-            {error && (
-              <p className="text-sm text-red-500 text-center">{error}</p>
-            )}
           </form>
         </CardContent>
       </Card>

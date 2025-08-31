@@ -23,3 +23,7 @@ export const s3Client = new S3Client({
 export const BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
 console.log(`S3 client created for bucket ${BUCKET_NAME}`);
+
+
+
+console.log("FRONTEND_URL:", process.env.FRONTEND_URL);
