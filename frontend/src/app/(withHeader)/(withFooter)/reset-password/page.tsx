@@ -13,12 +13,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState, FormEvent, Suspense } from "react";
+import toast from "react-hot-toast";
 
 function ResetPasswordForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   // This hook reads the parameters from the URL (e.g., ?token=...)
   const searchParams = useSearchParams();
@@ -28,15 +28,15 @@ function ResetPasswordForm() {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    setMessage("");
-    setError("");
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      toast.error("Passwords do not match.");
+      setIsLoading(false);
       return;
     }
     if (!token) {
-      setError("No reset token found. Please request a new link.");
+      toast.error("No reset token found. Please request a new link.");
+      setIsLoading(false);
       return;
     }
 
@@ -54,14 +54,14 @@ function ResetPasswordForm() {
       if (!response.ok)
         throw new Error(data.error || "Failed to reset password.");
 
-      setMessage(data.message);
-      setTimeout(() => router.push("/login"), 3000); // Redirect to login on success
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError(String(err));
-      }
+      toast.success(data.message);
+      setTimeout(() => router.push("/login"), 2000); // Redirect to login on success
+    } catch (error) {
+      console.log(error);
+      toast.error("Oops! Something went wrong.");
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -94,15 +94,13 @@ function ResetPasswordForm() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={!token}>
-              Reset Password
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading || !token}
+            >
+              {isLoading ? "Resetting..." : "Reset Password"}
             </Button>
-            {message && (
-              <p className="text-sm text-green-500 text-center">{message}</p>
-            )}
-            {error && (
-              <p className="text-sm text-red-500 text-center">{error}</p>
-            )}
           </form>
         </CardContent>
       </Card>
