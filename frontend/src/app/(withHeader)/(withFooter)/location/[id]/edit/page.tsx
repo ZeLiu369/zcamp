@@ -74,7 +74,11 @@ export default function EditCampgroundPage() {
         if (!response.ok) throw new Error("Failed to fetch location data.");
         const data: LocationData = await response.json();
 
-        if (user && data.created_by_user_id !== user.id) {
+        if (
+          user &&
+          data.created_by_user_id !== user.id &&
+          user.role !== "admin"
+        ) {
           router.push(`/location/${id}`);
           return;
         }
@@ -89,7 +93,8 @@ export default function EditCampgroundPage() {
 
         // Also fetch the initial address
         reverseGeocode(longitude, latitude);
-      } catch (err) {
+      } catch (error) {
+        console.error("Error loading campground data", error);
         toast.error("Could not load campground data.");
       } finally {
         setLoading(false);

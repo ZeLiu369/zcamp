@@ -166,12 +166,19 @@ apiRoutes.get('/locations/:id', async (req: Request, res: Response): Promise<any
     }
   });
 
-  apiRoutes.delete('/locations/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+apiRoutes.delete('/locations/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
     const { id: locationId } = req.params;
     const userId = req.user?.id;
+    const userRole = req.user?.role;
 
     if (!userId) {
       res.status(401).json({ error: 'User not authenticated.' });
+      return;
+    }
+
+    if (!userRole) {
+      // Or handle it in a way that makes sense for your app
+      res.status(403).json({ error: 'User role is missing, authorization denied.' });
       return;
     }
 
@@ -191,7 +198,6 @@ apiRoutes.get('/locations/:id', async (req: Request, res: Response): Promise<any
       }
 
       const creatorId = locationResult.rows[0].created_by_user_id;
-      const userRole = req.user?.role;
       if (creatorId !== userId && userRole !== 'admin') {
         await client.query('ROLLBACK');
         res.status(403).json({ error: 'Forbidden: You are not authorized to delete this campground.' });
@@ -210,10 +216,11 @@ apiRoutes.get('/locations/:id', async (req: Request, res: Response): Promise<any
     }
   });
 
-  apiRoutes.put('/locations/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+apiRoutes.put('/locations/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
     const { id: locationId } = req.params;
     const { name, latitude, longitude } = req.body;
     const userId = req.user?.id;
+    const userRole = req.user?.role;
 
     if (!name || latitude === undefined || longitude === undefined) {
       res.status(400).json({ error: 'Name and coordinates are required.' });
@@ -221,6 +228,12 @@ apiRoutes.get('/locations/:id', async (req: Request, res: Response): Promise<any
     }
     if (!userId) {
       res.status(401).json({ error: 'User not authenticated.' });
+      return;
+    }
+
+    if (!userRole) {
+      // Or handle it in a way that makes sense for your app
+      res.status(403).json({ error: 'User role is missing, authorization denied.' });
       return;
     }
 
@@ -239,7 +252,9 @@ apiRoutes.get('/locations/:id', async (req: Request, res: Response): Promise<any
         return;
       }
 
-      if (locationResult.rows[0].created_by_user_id !== userId) {
+      const creatorId = locationResult.rows[0].created_by_user_id;
+
+      if (creatorId !== userId && userRole !== 'admin') {
         await client.query('ROLLBACK');
         res.status(403).json({ error: 'Forbidden: You are not authorized to edit this campground.' });
         return;

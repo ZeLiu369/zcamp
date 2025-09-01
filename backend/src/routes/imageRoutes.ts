@@ -76,12 +76,17 @@ router.delete('/images/:id', authMiddleware, async (req: AuthRequest, res: Respo
     try {
         const { id: imageId } = req.params;
         const userId = req.user?.id;
+        const userRole = req.user?.role;
 
         if (!userId) {
             return res.status(401).json({ error: 'User not authenticated.' });
         }
+        if (!userRole) {
+            // Or handle it in a way that makes sense for your app
+            return res.status(403).json({ error: 'User role is missing, authorization denied.' });
+          }
 
-        await ImageService.deleteImage(imageId, userId);
+        await ImageService.deleteImage(imageId, userId, userRole);
 
         return res.status(200).json({ message: 'Image deleted successfully.' });
 

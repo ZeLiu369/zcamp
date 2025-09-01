@@ -104,7 +104,7 @@ export class ImageService {
      * @param imageId - 要删除的图片的数据库ID
      * @param string - 发起删除请求的用户的ID
      */
-    public static async deleteImage(imageId: string, userId: string): Promise<void> {
+    public static async deleteImage(imageId: string, userId: string, userRole: string): Promise<void> {
         const client = await pool.connect();
         let s3KeyToDelete: string | null = null;
 
@@ -116,6 +116,7 @@ export class ImageService {
                 'SELECT user_id, public_id FROM campground_images WHERE id = $1 FOR UPDATE',
                 [imageId]
             );
+
 
             if (imageResult.rows.length === 0) {
                 // 如果图片一开始就不存在，直接回滚并抛出“未找到”错误
@@ -129,7 +130,7 @@ export class ImageService {
             s3KeyToDelete = s3Key; // 暂存S3 Key，用于事务成功后再删除
 
             // 2. 执行安全校验
-            if (uploaderId !== userId) {
+            if (uploaderId !== userId && userRole !== 'admin') {
                 await client.query('ROLLBACK');
                 const error: any = new Error('Forbidden: You are not authorized to delete this image.');
                 error.statusCode = 403;

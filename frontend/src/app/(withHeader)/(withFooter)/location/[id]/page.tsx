@@ -5,7 +5,7 @@ import { useEffect, useState, useCallback, FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Map, { Marker } from "react-map-gl/mapbox";
-import { Star, Trash2, Pencil, X } from "lucide-react";
+import { Star, Trash2, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeepBlueMapPin } from "@/components/icons/MapPin";
 import { ReviewForm } from "@/components/components/ReviewForm";
@@ -24,7 +24,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-hot-toast";
-import { ImageGallery } from "@/components/components/ImageGallery";
 import { ImagePreview } from "@/components/components/ImagePreview";
 
 // Define the types for the data we expect from our API
@@ -300,38 +299,6 @@ export default function LocationDetailPage() {
     }
   };
 
-  const handleDeleteImage = async (imageId: string) => {
-    if (!user) {
-      alert("You must be logged in to delete an image.");
-      return;
-    }
-
-    if (confirm("Are you sure you want to delete this image?")) {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/images/${imageId}`,
-          {
-            method: "DELETE",
-            credentials: "include", // Use this for cookie-based auth
-          }
-        );
-
-        const data = await response.json();
-        if (!response.ok)
-          throw new Error(data.error || "Failed to delete image.");
-
-        // Refresh the location data to show the updated image gallery
-        fetchLocationDetail();
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError(String(err));
-        }
-      }
-    }
-  };
-
   if (loading) {
     return <div className="text-center p-10">Loading...</div>;
   }
@@ -345,14 +312,15 @@ export default function LocationDetailPage() {
   }
 
   const [longitude, latitude] = location.coordinates.coordinates;
-  const isCreator = user && user.id === location.created_by_user_id;
+  const isAdminOrCreator =
+    user && (user.id === location.created_by_user_id || user.role === "admin");
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-4xl font-bold">{location.name}</h1>
         {/* THE KEY CHANGE: Conditionally render the Delete button */}
-        {isCreator && (
+        {isAdminOrCreator && (
           <div className="flex items-center gap-2">
             <Button asChild>
               <Link href={`/location/${location.id}/edit`}>

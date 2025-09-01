@@ -22,7 +22,7 @@ export const authMiddleware: RequestHandler = (req: AuthRequest, res: Response, 
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET as string
-    ) as { user: { id: string; username: string } };
+    ) as { user: { id: string; username: string; role: string } };
 
     req.user = decoded.user;
     next();

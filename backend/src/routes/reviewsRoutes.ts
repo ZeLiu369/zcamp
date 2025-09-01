@@ -52,10 +52,15 @@ reviewRoutes.post('/', authMiddleware, async (req: AuthRequest, res: Response): 
 reviewRoutes.delete('/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<any> => {
     const { id: reviewId } = req.params; // The ID of the review to delete
     const userId = req.user?.id;         // The ID of the user making the request
+    const userRole = req.user?.role; 
 
     if (!userId) {
         return res.status(401).json({ error: 'User not authenticated.' });
     }
+    if (!userRole) {
+        // Or handle it in a way that makes sense for your app
+        return res.status(403).json({ error: 'User role is missing, authorization denied.' });
+      }
 
     const client = await pool.connect();
     try {
@@ -72,7 +77,7 @@ reviewRoutes.delete('/:id', authMiddleware, async (req: AuthRequest, res: Respon
         const authorId = reviewResult.rows[0].user_id;
 
         // SECURITY CHECK: Ensure the person deleting is the person who wrote it
-        if (authorId !== userId) {
+        if (authorId !== userId && userRole !== 'admin') {
             await client.query('ROLLBACK');
             return res.status(403).json({ error: 'Forbidden: You are not authorized to delete this review.' });
         }

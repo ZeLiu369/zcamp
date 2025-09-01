@@ -16,6 +16,7 @@ import { AuthContext } from "./auth-context";
 interface User {
   id: string;
   username: string;
+  role: string;
 }
 
 export function AuthProvider({ children }: { readonly children: ReactNode }) {
@@ -40,7 +41,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
 
       if (response.ok) {
         const data = await response.json();
-        setUser({ id: data.id, username: data.username });
+        setUser({ id: data.id, username: data.username, role: data.role });
       } else {
         setUser(null);
       }

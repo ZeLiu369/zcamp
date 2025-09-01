@@ -30,6 +30,7 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response): Promi
                     u.username,
                     u.email,
                     u.created_at,
+                    u.role,
                     (
                         SELECT COALESCE(json_agg(l.*), '[]')
                         FROM locations l
