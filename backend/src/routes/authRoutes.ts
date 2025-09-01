@@ -105,9 +105,10 @@ authRoutes.post('/login', async (req: Request, res: Response): Promise<any> => {
                 user: {
                     id: user.id,
                     username: user.username,
+                    role: user.role // admin or user
                 },
             };
-
+            
             // Step 4: Sign the token with your secret key
             jwt.sign(
                 payload,

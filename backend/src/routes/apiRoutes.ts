@@ -191,7 +191,8 @@ apiRoutes.get('/locations/:id', async (req: Request, res: Response): Promise<any
       }
 
       const creatorId = locationResult.rows[0].created_by_user_id;
-      if (creatorId !== userId) {
+      const userRole = req.user?.role;
+      if (creatorId !== userId && userRole !== 'admin') {
         await client.query('ROLLBACK');
         res.status(403).json({ error: 'Forbidden: You are not authorized to delete this campground.' });
         return;
