@@ -1,10 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import { useAuth } from "@/context/auth-provider";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import toast from "react-hot-toast";
 
 // Define the types for the profile data
 interface CreatedLocation {
@@ -28,10 +49,42 @@ interface ProfileData {
 }
 
 export default function ProfilePage() {
-  const { user, isLoading } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const router = useRouter();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [password, setPassword] = useState("");
+
+  const handleDeleteAccount = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!password) {
+      toast.error("Password is required to delete your account.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/profile/me`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ password }),
+        }
+      );
+
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to delete account.");
+
+      toast.success("Account deleted successfully.");
+      logout(); // Clear auth state from context
+      router.push("/"); // Redirect to homepage
+    } catch (error) {
+      toast.error("Oops! Something went wrong.");
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
     // Redirect if not logged in
@@ -122,6 +175,56 @@ export default function ProfilePage() {
             ) : (
               <p>You haven&apos;t written any reviews yet.</p>
             )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-8 max-w-lg">
+        <Card className="border-red-500">
+          <CardHeader>
+            <CardTitle>Danger Zone</CardTitle>
+            <CardDescription>
+              Deleting your account is a permanent action and cannot be undone.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">Delete My Account</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <form onSubmit={handleDeleteAccount}>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Are you absolutely sure?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action is permanent. All of your reviews and uploaded
+                      images will be deleted. To confirm, please type your
+                      password.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="py-4">
+                    <Label htmlFor="password-confirm">Password</Label>
+                    <Input
+                      id="password-confirm"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setPassword("")}>
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction type="submit">
+                      Permanently Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </form>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
       </div>
