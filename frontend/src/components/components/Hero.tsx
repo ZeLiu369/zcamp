@@ -7,8 +7,21 @@ import { motion } from "framer-motion";
 import { Highlight } from "@/components/ui/hero-highlight";
 import Link from "next/link";
 import Image from "next/image";
+import { TypewriterEffectSmooth } from "@/components/ui/typewriter-effect";
 
 export function Hero() {
+  const subheadingWords = [
+    { text: "Find" },
+    { text: "and" },
+    { text: "review" },
+    { text: "the" },
+    { text: "best" },
+    { text: "campgrounds" },
+    { text: "across" },
+    { text: "North" },
+    { text: "America." },
+  ];
+
   return (
     // 1. Use a standard <section> tag as the main container
     <section className="relative w-full py-20 md:py-32 lg:py-40 overflow-hidden">
@@ -30,7 +43,7 @@ export function Hero() {
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: [20, -5, 0] }}
-          transition={{ duration: 0.6, ease: [0.4, 0.0, 0.2, 1] }}
+          transition={{ duration: 4.0, ease: [0.4, 0.0, 0.2, 1] }}
           className="max-w-4xl mx-auto text-center font-bold text-white text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-snug tracking-tighter"
         >
           Discover Your Next{" "}
@@ -38,7 +51,7 @@ export function Hero() {
           <Highlight>Adventure</Highlight>
         </motion.h1>
 
-        <motion.p
+        {/* <motion.p
           className="text-gray-200 md:text-xl mt-4 max-w-2xl mx-auto text-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -46,7 +59,21 @@ export function Hero() {
         >
           Find and review the best campgrounds across North America. Your
           journey starts here.
-        </motion.p>
+        </motion.p> */}
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 1.2 }}
+        >
+          <TypewriterEffectSmooth
+            words={subheadingWords}
+            // className="text-gray-200 md:text-xl mt-4 max-w-2xl mx-auto text-center"
+            className="mt-4 max-w-2xl mx-auto"
+            textClassName="text-white md:text-2xl font-bold text-center"
+            cursorClassName="bg-blue-400 w-[3px] h-[0.8em] md:h-8 rounded-full" // Optional: customize the cursor color
+          />
+        </motion.div>
 
         <motion.div
           className="mt-6 text-center"
