@@ -1,7 +1,7 @@
 // In src/components/Hero.tsx
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/moving-border";
 import { motion } from "framer-motion";
 // We only need the Highlight component, not the HeroHighlight wrapper
 import { Highlight } from "@/components/ui/hero-highlight";
@@ -20,6 +20,10 @@ export function Hero() {
     { text: "across" },
     { text: "North" },
     { text: "America." },
+    // { text: "Your" },
+    // { text: "journey" },
+    // { text: "starts" },
+    // { text: "here." },
   ];
 
   return (
@@ -81,7 +85,7 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 1.0 }}
         >
-          <Button asChild size="lg">
+          <Button size="lg">
             <Link href="/explore">Explore Campgrounds</Link>
           </Button>
         </motion.div>
