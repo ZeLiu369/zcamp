@@ -34,6 +34,18 @@ authRoutes.post('/register', async (req: Request, res: Response): Promise<any> =
 
     const client = await pool.connect();
     try {
+        // 1. Check if the username is already taken
+        const existingUser = await client.query('SELECT * FROM users WHERE username = $1', [username]);
+        if (existingUser.rows.length > 0) {
+            return res.status(409).json({ error: 'This username is already taken. Please choose another.' });
+        }
+
+        // 2. Check if the email is already registered
+        const existingEmail = await client.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (existingEmail.rows.length > 0) {
+            return res.status(409).json({ error: 'This email address is already registered.' });
+        }
+
         await client.query('BEGIN');
 
         // Step 1: Hash the password
