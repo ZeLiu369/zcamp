@@ -29,6 +29,18 @@ function ResetPasswordForm() {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters long.");
+      setIsLoading(false); // Stop the submission process
+      return; // Exit the function
+    }
+
+    if (password.length > 20) {
+      toast.error("Password must be less than 20 characters long.");
+      setIsLoading(false); // Stop the submission process
+      return; // Exit the function
+    }
+
     if (password !== confirmPassword) {
       toast.error("Passwords do not match.");
       setIsLoading(false);

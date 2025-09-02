@@ -24,6 +24,14 @@ authRoutes.post('/register', async (req: Request, res: Response): Promise<any> =
         return res.status(400).json({ error: 'Username, email, and password are required.' });
     }
 
+    if (password.length < 8) {
+        return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+    }
+
+    if (password.length > 20) {
+        return res.status(400).json({ error: 'Password must be less than 20 characters long.' });
+    }
+
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
@@ -214,6 +222,15 @@ authRoutes.post('/reset-password', async (req: Request, res: Response): Promise<
     if (!token || !newPassword) {
         return res.status(400).json({ error: 'Token and new password are required.' });
     }
+
+    if (newPassword.length < 8) {
+        return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+    }
+
+    if (newPassword.length > 20) {
+        return res.status(400).json({ error: 'Password must be less than 20 characters long.' });
+    }
+
 
     // Hash the incoming token so we can find it in the database
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
