@@ -32,6 +32,12 @@ export default function SignUpPage() {
     event.preventDefault();
     setIsLoading(true);
 
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters long.");
+      setIsLoading(false); // Stop the submission process
+      return; // Exit the function
+    }
+
     try {
       // Step 3: Send the form data to your backend API
       const response = await fetch(

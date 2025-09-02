@@ -262,4 +262,46 @@ authRoutes.post('/reset-password', async (req: Request, res: Response): Promise<
     }
 });
 
+authRoutes.post('/verify-email', async (req: Request, res: Response): Promise<any> => {
+    const { token } = req.body;
+
+    if (!token) {
+        return res.status(400).json({ error: 'Verification token is required.' });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // Find a user with a matching, non-expired verification token
+        const userResult = await client.query(
+            'SELECT * FROM users WHERE verification_token = $1 AND verification_token_expires_at > NOW()',
+            [token]
+        );
+
+        const user = userResult.rows[0];
+        if (!user) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ error: 'Token is invalid or has expired.' });
+        }
+
+        // If token is valid, update the user to be verified and clear the token
+        await client.query(
+            'UPDATE users SET is_verified = TRUE, verification_token = NULL, verification_token_expires_at = NULL WHERE id = $1',
+            [user.id]
+        );
+        
+        await client.query('COMMIT');
+
+        res.status(200).json({ message: 'Email verified successfully. You can now log in.' });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Email verification error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+});
+
 export default authRoutes;
