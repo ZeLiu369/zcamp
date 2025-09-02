@@ -34,19 +34,19 @@ export default function ForgotPasswordPage() {
 
       const data = await response.json();
 
-      // 无论成功与否，后端都会返回 200 OK
-      // 所以我们直接显示后端返回的消息
+      // Backend returns 200 OK regardless of success or failure
+      // So we directly display the message returned by the backend
       if (response.ok) {
-        // 2. 显示一个成功的 toast 消息
+        // 2. Display a success toast message
         toast.success(data.message);
-        setEmail(""); // 成功后清空输入框
+        setEmail(""); // Clear input field after success
       } else {
-        // 如果后端返回错误（例如 500），则显示错误消息
+        // If backend returns error (e.g. 500), display error message
         throw new Error(data.error || "Something went wrong.");
       }
     } catch (error) {
       console.log(error);
-      // 3. 显示一个错误的 toast 消息
+      // 3. Display an error toast message
       toast.error("Oops! Something went wrong.");
     } finally {
       setIsLoading(false);

@@ -63,7 +63,7 @@ function getClusterSizeClasses(pointCount: number): string {
   return "w-12 h-12 text-lg"; // Large
 }
 
-// 6. 优化标记渲染 - 使用 React.memo
+// 6. Optimize marker rendering - use React.memo
 const ClusterMarker = React.memo(
   ({
     cluster,
@@ -130,7 +130,7 @@ export default function ExplorePage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // 1. 使用 throttle 限制 handleMapMove 调用频率
+  // 1. Use throttle to limit handleMapMove call frequency
   const handleMapMoveThrottled = useMemo(
     () =>
       throttle(() => {
@@ -140,7 +140,7 @@ export default function ExplorePage() {
         const mapBounds = map.getBounds();
         if (!mapBounds) return;
 
-        // 批量更新状态，减少重新渲染
+        // Batch update state to reduce re-renders
         setBounds([
           mapBounds.getWest(),
           mapBounds.getSouth(),
@@ -148,11 +148,11 @@ export default function ExplorePage() {
           mapBounds.getNorth(),
         ]);
         setZoom(map.getZoom());
-      }, 16), // 60fps = 16ms间隔
-    [mapRef, setBounds, setZoom] // 依赖项决定何时需要重新创建一个新的 throttle 函数
+      }, 16), // 60fps = 16ms interval
+    [mapRef, setBounds, setZoom] // Dependencies determine when to recreate a new throttle function
   );
 
-  // 2. 使用 debounce 延迟URL更新, useMemo is equal to useCallback, just to avoid lint warning
+  // 2. Use debounce to delay URL updates, useMemo is equal to useCallback, just to avoid lint warning
   const updateUrlDebounced = useMemo(
     () =>
       debounce((lng: number, lat: number, zoom: number) => {
@@ -162,10 +162,10 @@ export default function ExplorePage() {
         )}&zoom=${zoom.toFixed(2)}`;
         router.replace(newUrl, { scroll: false });
       }, 300),
-    [pathname, router] // 依赖项决定何时需要重新创建一个新的 debounce 函数
+    [pathname, router] // Dependencies determine when to recreate a new debounce function
   );
 
-  // 3. 分离URL更新逻辑
+  // 3. Separate URL update logic
   const handleMapMove = useCallback(() => {
     console.log("handleMapMove called");
 
@@ -178,14 +178,14 @@ export default function ExplorePage() {
     const { lng, lat } = map.getCenter();
     const newZoom = map.getZoom();
 
-    // 立即更新地图状态（用于聚类）
+    // Immediately update map state (for clustering)
     handleMapMoveThrottled();
 
-    // 延迟更新URL（不影响渲染性能）
+    // Delay URL update (does not affect rendering performance)
     updateUrlDebounced(lng, lat, newZoom);
   }, [handleMapMoveThrottled, updateUrlDebounced]);
 
-  // 4. 优化 points 计算 - 添加依赖检查
+  // 4. Optimize points calculation - add dependency checks
   const points = useMemo(() => {
     if (locations.length === 0) return [];
 
@@ -202,7 +202,7 @@ export default function ExplorePage() {
       .filter((point): point is GeoJsonPoint => point !== null);
   }, [locations]);
 
-  // 5. 优化 supercluster 配置
+  // 5. Optimize supercluster configuration
   const { clusters, supercluster } = useSupercluster({
     points,
     bounds,
@@ -210,7 +210,7 @@ export default function ExplorePage() {
     options: {
       radius: 40,
       maxZoom: 16,
-      // 添加性能优化选项
+      // Add performance optimization options
       extent: 512,
       nodeSize: 64,
     },
@@ -271,23 +271,23 @@ export default function ExplorePage() {
     const zoom = searchParams.get("zoom");
 
     if (isUserInteraction.current) {
-      isUserInteraction.current = false; // 重置标志位
+      isUserInteraction.current = false; // Reset flag
       return;
     }
 
     if (lng && lat && zoom && mapRef.current) {
       console.log("flyTo called");
 
-      // 如果 URL 中有坐标，就命令地图飞过去
+      // If there are coordinates in URL, command map to fly there
       mapRef.current.flyTo({
         center: [Number(lng), Number(lat)],
         zoom: Number(zoom),
-        duration: 2000, // 飞行动画持续时间（毫秒）
+        duration: 2000, // Flight animation duration (milliseconds)
       });
     }
-  }, [searchParams]); // 依赖项是 searchParams
+  }, [searchParams]); // Dependency is searchParams
 
-  // 清理定时器
+  // Clean up timers
   useEffect(() => {
     return () => {
       handleMapMoveThrottled.cancel();

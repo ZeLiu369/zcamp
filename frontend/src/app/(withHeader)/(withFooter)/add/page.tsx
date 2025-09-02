@@ -31,7 +31,7 @@ export default function AddCampgroundPage() {
   const [latInput, setLatInput] = useState("");
   const [lngInput, setLngInput] = useState("");
 
-  // 使用 debounce 来防止频繁更新地图
+  // Use debounce to prevent frequent map updates
   const debouncedLat = useDebounce(latInput, 500);
   const debouncedLng = useDebounce(lngInput, 500);
 
@@ -125,15 +125,15 @@ export default function AddCampgroundPage() {
 
       toast.success(`Successfully added "${data.name}"!`);
       setName("");
-      setNewPin(null); // 提交成功后清空图钉
+      setNewPin(null); // Clear pin after successful submission
 
-      // 1. 从返回的数据中获取新创建的露营地的 ID
+      // 1. Get the ID of the newly created campground from the returned data
       const newLocationId = data.id;
 
-      // 2. 在短暂延迟后，使用 router 跳转到新的详情页面
+      // 2. After a brief delay, use router to navigate to the new detail page
       setTimeout(() => {
         router.push(`/location/${newLocationId}`);
-      }, 1500); // 1.5秒延迟，让用户可以看到成功消息
+      }, 1500); // 1.5 second delay to let user see success message
     } catch (err: unknown) {
       toast.error("Oops! Something went wrong.");
       console.error(err);
@@ -157,21 +157,21 @@ export default function AddCampgroundPage() {
     }
   }, [debouncedLat, debouncedLng]);
 
-  // ... 你组件中所有的 hooks 和函数保持不变 ...
+  // ... All hooks and functions in your component remain unchanged ...
 
   if (isLoading || !user) {
     return <div>Loading...</div>;
   }
 
   return (
-    // 1. 主容器：
-    // - 移动端 (默认): 高度是 min-h-[...]，意味着它可以被内容撑得更高，允许页面滚动。
-    // - 桌面端 (md:): 高度变为固定的 h-[...]，内容将被限制在这个容器内。
+    // 1. Main container:
+    // - Mobile (default): Height is min-h-[...], meaning it can be pushed higher by content, allowing page scrolling.
+    // - Desktop (md:): Height becomes fixed h-[...], content will be limited within this container.
     <div className="flex flex-col md:flex-row min-h-[calc(100vh-56px)] md:h-[calc(100vh-56px)] w-screen">
-      {/* 2. 左侧/顶部面板：表单区域 */}
+      {/* 2. Left/top panel: Form area */}
       {/*
-      - 移动端 (默认): 高度自适应，不再需要滚动条，因为它会把主容器往下推。
-      - 桌面端 (md:): 因为主容器高度固定了，所以这里需要 overflow-y-auto 来处理内容过长的情况。
+      - Mobile (default): Height adaptive, no longer needs scrollbar as it will push the main container down.
+      - Desktop (md:): Since main container height is fixed, overflow-y-auto is needed here to handle content overflow.
     */}
       <div className="w-full md:w-[450px] flex-shrink-0 bg-white dark:bg-gray-900 md:overflow-y-auto">
         <div className="w-full max-w-md mx-auto p-8">
@@ -226,7 +226,7 @@ export default function AddCampgroundPage() {
               </div>
             </div>
 
-            {/* 地图现在从表单中移除了 */}
+            {/* Map is now removed from the form */}
 
             <Button type="submit" className="w-full">
               Add Campground
@@ -235,10 +235,10 @@ export default function AddCampgroundPage() {
         </div>
       </div>
 
-      {/* 3. 右侧/底部面板：地图区域 */}
+      {/* 3. Right/bottom panel: Map area */}
       {/*
-      - 移动端 (默认): 保持 h-96 的固定高度。
-      - 桌面端 (md:): 恢复 flex-grow 并让高度自适应。
+      - Mobile (default): Maintain fixed height of h-96.
+      - Desktop (md:): Restore flex-grow and let height adapt.
     */}
       <div className="relative w-full h-96 md:h-[calc(100vh-56px)] md:flex-1">
         <Map

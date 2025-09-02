@@ -1,41 +1,41 @@
 {
   "compilerOptions": {
-    /* ----- 1. 基本编译目标与模块系统 (Core Compilation & Module System) ----- */
-    "target": "ES2022", // 目标代码为 ES2022。Node.js v20+ 已完全支持，无需过度降级。
-    "module": "NodeNext", // 采用与 Node.js 当前 ESM/CJS 生态兼容的模块系统。
-    "moduleResolution": "NodeNext", // 配合 module: "NodeNext"，使用 Node.js 最新的模块解析策略。
-    "lib": ["ES2022"], // 只包含 ES2022 的库，避免引入 DOM 等浏览器环境的类型。
+    /* ----- 1. Core Compilation & Module System ----- */
+    "target": "ES2022", // Target ES2022. Node.js v20+ fully supports it, no need for excessive downgrading.
+    "module": "NodeNext", // Use module system compatible with Node.js current ESM/CJS ecosystem.
+    "moduleResolution": "NodeNext", // Works with module: "NodeNext", uses Node.js latest module resolution strategy.
+    "lib": ["ES2022"], // Only include ES2022 libraries, avoid introducing DOM and other browser environment types.
 
-    /* ----- 2. 严格性与代码质量 (Strictness & Code Quality) ----- */
-    "strict": true, // 启用所有严格类型检查选项，这是现代 TypeScript 项目的基石。
-    "noUnusedLocals": true, // 报告未使用的局部变量。
-    "noUnusedParameters": true, // 报告未使用的参数。
-    "noImplicitReturns": true, // 确保函数所有路径都有返回值。
-    "exactOptionalPropertyTypes": true, // 更精确地处理可选属性，区分 `| undefined`。
+    /* ----- 2. Strictness & Code Quality ----- */
+    "strict": true, // Enable all strict type checking options, the foundation of modern TypeScript projects.
+    "noUnusedLocals": true, // Report unused local variables.
+    "noUnusedParameters": true, // Report unused parameters.
+    "noImplicitReturns": true, // Ensure all function paths have return values.
+    "exactOptionalPropertyTypes": true, // More precise handling of optional properties, distinguish `| undefined`.
 
-    /* ----- 3. JS/TS 互操作性与生态兼容 (Interoperability & Compatibility) ----- */
-    "esModuleInterop": true, // 解决 CommonJS 和 ES Modules 之间的兼容性问题，必开。
-    "allowSyntheticDefaultImports": true, // 允许 `import React from 'react'` 这样的写法，与 esModuleInterop 配合使用。
-    "resolveJsonModule": true, // 允许直接 import .json 文件。
-    "isolatedModules": true, // 确保每个文件都可以被安全地独立编译。
+    /* ----- 3. Interoperability & Compatibility ----- */
+    "esModuleInterop": true, // Resolve compatibility issues between CommonJS and ES Modules, must be enabled.
+    "allowSyntheticDefaultImports": true, // Allow syntax like `import React from 'react'`, works with esModuleInterop.
+    "resolveJsonModule": true, // Allow direct import of .json files.
+    "isolatedModules": true, // Ensure each file can be safely compiled independently.
 
-    /* ----- 4. 输出与文件结构 (Output & File Structure) ----- */
-    "outDir": "./dist", // 编译输出目录。
-    "rootDir": "./src", // 指定源码根目录。
+    /* ----- 4. Output & File Structure ----- */
+    "outDir": "./dist", // Compilation output directory.
+    "rootDir": "./src", // Specify source code root directory.
 
-    /* ----- 5. 开发与调试 (Development & Debugging) ----- */
-    "sourceMap": true, // 生成 .map 文件，用于调试。
-    "declaration": true, // 为你的代码生成 .d.ts 类型声明文件。
-    "declarationMap": true, // 为 .d.ts 文件生成 source map。
+    /* ----- 5. Development & Debugging ----- */
+    "sourceMap": true, // Generate .map files for debugging.
+    "declaration": true, // Generate .d.ts type declaration files for your code.
+    "declarationMap": true, // Generate source maps for .d.ts files.
 
-    /* ----- 6. 性能与构建优化 (Performance & Build Optimization) ----- */
-    "skipLibCheck": true, // 跳过对所有 .d.ts 文件的类型检查，大幅提升编译速度。
-    "forceConsistentCasingInFileNames": true,// 强制文件名大小写一致，避免在不同操作系统下的问题。
+    /* ----- 6. Performance & Build Optimization ----- */
+    "skipLibCheck": true, // Skip type checking for all .d.ts files, significantly improve compilation speed.
+    "forceConsistentCasingInFileNames": true,// Force consistent file name casing, avoid issues on different operating systems.
     "baseUrl": ".",                                  /* Specify the base directory to resolve non-relative module names. */
     "paths": {
       "#/*": ["./src/*"]
     },  
   },
-  "include": ["src/**/*"], // 只编译 src 目录下的文件。
-  "exclude": ["node_modules", "dist"] // 排除 node_modules 和 dist 目录。
+  "include": ["src/**/*"], // Only compile files in src directory.
+  "exclude": ["node_modules", "dist"] // Exclude node_modules and dist directories.
 }

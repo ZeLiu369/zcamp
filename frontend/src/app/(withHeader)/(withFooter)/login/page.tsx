@@ -112,7 +112,7 @@ export default function LoginPage() {
               )}
             </Button>
 
-            {/* 显示错误信息 */}
+            {/* Display error message */}
             {error && (
               <p className="text-sm text-red-500 text-center">{error}</p>
             )}

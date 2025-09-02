@@ -67,19 +67,19 @@ apiRoutes.get('/reverse-geocode', async (req: Request, res: Response): Promise<a
         return res.status(500).json({ error: 'Server configuration error: Mapbox token not found.' });
     }
 
-    // Mapbox 反向地理编码 API 的 URL
+    // Mapbox reverse geocoding API URL
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lon},${lat}.json`;
 
     try {
         const response = await axios.get(url, {
             params: {
                 access_token: mapboxToken,
-                types: 'address,place', // 我们感兴趣的地址类型
-                limit: 1 // 我们只需要最匹配的一个结果
+                types: 'address,place', // Address types we're interested in
+                limit: 1 // We only need the most matching result
             }
         });
 
-        // 将 Mapbox 返回的第一个结果（最匹配的地址）转发给我们的前端
+        // Forward the first result from Mapbox (most matching address) to our frontend
         if (response.data.features && response.data.features.length > 0) {
             res.status(200).json({ place_name: response.data.features[0].place_name });
         } else {
@@ -93,19 +93,19 @@ apiRoutes.get('/reverse-geocode', async (req: Request, res: Response): Promise<a
 });
 
 
-// 获取单个露营地及其评论的终点
+// Endpoint to get a single campground and its reviews
 // GET /api/locations/:id
 apiRoutes.get('/locations/:id', async (req: Request, res: Response): Promise<any> => {
-    const { id } = req.params; // 从 URL 中获取 ID
+    const { id } = req.params; // Get ID from URL
   
     try {
       const client = await pool.connect();
       try {
-        // 这是一个更高级的 SQL 查询
-        // 它从 locations 表中选择一个露营地
-        // 并且使用 LEFT JOIN 来包含所有相关的评论和评论者的用户名
-        // COALESCE 和 json_agg 是 PostgreSQL 的强大功能，
-        // 它们可以将所有评论聚合成一个 JSON 数组，即使没有评论也是如此
+        // This is a more advanced SQL query
+        // It selects a campground from the locations table
+        // and uses LEFT JOIN to include all related reviews and reviewer usernames
+        // COALESCE and json_agg are powerful PostgreSQL features,
+        // they can aggregate all reviews into a JSON array, even if there are no reviews
         const query = `
           SELECT
             l.id,
@@ -151,7 +151,7 @@ apiRoutes.get('/locations/:id', async (req: Request, res: Response): Promise<any
           return res.status(404).json({ error: 'Location not found.' });
         }
         
-        // 解析 coordinates 字符串为 JSON 对象
+        // Parse coordinates string to JSON object
         const location = result.rows[0];
         location.coordinates = JSON.parse(location.coordinates);
   

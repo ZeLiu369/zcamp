@@ -13,14 +13,14 @@ const storage = multer.memoryStorage();
 const upload = multer({
     storage: storage,
     limits: { 
-        fileSize: 10 * 1024 * 1024 // 限制每个文件最大为 10MB
+        fileSize: 10 * 1024 * 1024 // Limit each file to maximum 10MB
     },
     fileFilter: (req, file, cb) => {
-        // 只接受常见的图片格式
+        // Only accept common image formats
         if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
             cb(null, true);
         } else {
-            // 拒绝其他所有文件类型
+            // Reject all other file types
             cb(new Error('Invalid file type, only JPEG and PNG is allowed!'));
         }
     }
@@ -30,7 +30,7 @@ const upload = multer({
 router.post(
     '/locations/:id/images', 
     authMiddleware, 
-    upload.array('images', 10), // 'images' 是表单字段名，5是最大数量
+    upload.array('images', 10), // 'images' is the form field name, 10 is the maximum number
     async (req: AuthRequest, res: Response): Promise<any> => {
         
         try {
@@ -38,39 +38,39 @@ router.post(
             const userId = req.user?.id;
             const files = req.files as Express.Multer.File[];
 
-            // --- 1. 基本请求验证 ---
+            // --- 1. Basic request validation ---
             if (!userId) {
-                return res.status(403).json({ error: '用户未认证' });
+                return res.status(403).json({ error: 'User not authenticated' });
             }
             if (!files || files.length === 0) {
-                return res.status(400).json({ error: '未提供任何图片文件。' });
+                return res.status(400).json({ error: 'No image files provided.' });
             }
 
-            // --- 2. 调用服务层处理核心逻辑 ---
+            // --- 2. Call service layer to handle core logic ---
             const uploadedImages = await ImageService.uploadManyForLocation(files, locationId, userId);
 
-            // --- 3. 成功响应 ---
+            // --- 3. Success response ---
             return res.status(201).json(uploadedImages);
 
         } catch (error: any) {
-            // --- 4. 统一错误处理 ---
-            console.error('图片上传路由捕获到错误:', error);
-            // Multer可能会因为文件过大或类型不对抛出特定错误
+            // --- 4. Unified error handling ---
+            console.error('Image upload route caught error:', error);
+            // Multer may throw specific errors for files that are too large or wrong type
             if (error instanceof multer.MulterError) {
-                return res.status(400).json({ error: `文件上传错误: ${error.message}` });
+                return res.status(400).json({ error: `File upload error: ${error.message}` });
             }
-            // 我们自定义的文件过滤器也会抛出错误
-            if (error.message.includes('无效的文件类型')) {
+            // Our custom file filter will also throw errors
+            if (error.message.includes('Invalid file type')) {
                 return res.status(400).json({ error: error.message });
             }
-            // 其他所有来自服务层的错误都视为服务器内部错误
-            return res.status(500).json({ error: '服务器内部错误，上传失败。' });
+            // All other errors from service layer are treated as internal server errors
+            return res.status(500).json({ error: 'Internal server error, upload failed.' });
         }
     }
 );
 // backend/src/routes/imageRoutes.ts
 
-// ... (其他路由)
+// ... (other routes)
 
 router.delete('/images/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<any> => {
     try {
@@ -92,7 +92,7 @@ router.delete('/images/:id', authMiddleware, async (req: AuthRequest, res: Respo
 
     } catch (error: any) {
         console.error(`Failed to delete image ${req.params.id}:`, error);
-        // 根据Service层抛出的错误状态码来返回响应
+        // Return response based on error status code thrown by Service layer
         const statusCode = error.statusCode || 500;
         const message = error.statusCode ? error.message : 'Internal server error';
         return res.status(statusCode).json({ error: message });

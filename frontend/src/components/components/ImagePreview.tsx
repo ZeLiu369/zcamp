@@ -29,25 +29,25 @@ export function ImagePreview({ images, locationId }: ImagePreviewProps) {
   const smallImages = previewImages.slice(1, 3);
 
   return (
-    // 修改 1: 容器默认为普通div，只在md屏幕及以上尺寸时才应用网格布局
+    // Modification 1: Container defaults to regular div, only applies grid layout on md screens and above
     <div className="relative h-96 rounded-xl overflow-hidden md:grid md:grid-cols-5 md:gap-2">
-      {/* 左侧: 主图 */}
+      {/* Left: Main image */}
       {mainImage && (
-        // 修改 2: 在md屏幕及以上尺寸时，此容器才占据3列
+        // Modification 2: On md screens and above, this container occupies 3 columns
         <div className="w-full h-full md:col-span-3 md:row-span-2 relative md:rounded-xl">
           <Image
             src={mainImage.url}
             alt="Main campground"
             fill
-            className="object-cover rounded-xl md:rounded-xl" // 手机上也要有圆角
+            className="object-cover rounded-xl md:rounded-xl" // Also have rounded corners on mobile
             priority={true}
-            sizes="(max-width: 768px) 100vw, 60vw" // 这个逻辑是正确的
+            sizes="(max-width: 768px) 100vw, 60vw" // This logic is correct
           />
         </div>
       )}
 
-      {/* 右侧: 小图 */}
-      {/* 修改 3: 这个容器在手机上默认隐藏 (hidden)，只在md及以上屏幕显示为网格 (md:grid) */}
+      {/* Right: Small images */}
+      {/* Modification 3: This container is hidden by default on mobile (hidden), only displays as grid (md:grid) on md screens and above */}
       <div className="hidden md:grid col-span-2 row-span-2 grid-rows-2 gap-2">
         {smallImages.map((img, index) => (
           <div key={img.id} className="relative overflow-hidden rounded-xl">
@@ -55,10 +55,10 @@ export function ImagePreview({ images, locationId }: ImagePreviewProps) {
               src={img.url}
               alt={`Campground thumbnail ${index + 1}`}
               fill
-              className="object-cover" // className中 object-cover 已足够
+              className="object-cover" // object-cover in className is sufficient
               priority={true}
-              // 修改 4: 为小图也添加sizes属性，提升性能
-              // 在桌面端，它们占据 2/5 的宽度，即 40vw
+              // Modification 4: Add sizes attribute for small images too, improve performance
+              // On desktop, they occupy 2/5 of the width, i.e. 40vw
               sizes="(max-width: 768px) 0px, 40vw"
             />
           </div>
@@ -66,8 +66,8 @@ export function ImagePreview({ images, locationId }: ImagePreviewProps) {
         {smallImages.length < 2 && <div />}
       </div>
 
-      {/* "Show all photos" 按钮 */}
-      {/* 修改 5: 将按钮移到右下角，这在手机和桌面上都是更常见的UI模式 */}
+      {/* "Show all photos" button */}
+      {/* Modification 5: Move button to bottom right corner, this is a more common UI pattern on both mobile and desktop */}
       <div className="absolute bottom-4 right-4">
         <Button asChild>
           <Link href={`/location/${locationId}/photos`}>

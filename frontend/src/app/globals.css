@@ -124,10 +124,10 @@
 input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button {
   -webkit-appearance: none;
-  margin: 0; /* 有些浏览器可能需要这个 */
+  margin: 0; /* Some browsers may need this */
 }
 
-/* 适用于 Firefox 浏览器 */
+/* For Firefox browser */
 input[type=number] {
   -moz-appearance: textfield;
 }

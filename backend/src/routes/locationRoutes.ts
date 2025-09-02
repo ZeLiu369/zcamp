@@ -55,7 +55,7 @@ locationRoutes.get('/locations', async (req: Request, res: Response) => {
 
 locationRoutes.post('/locations', authMiddleware, async (req: AuthRequest, res: Response): Promise<any> => {
     const { name, longitude, latitude } = req.body;
-    const userId = req.user?.id; // 我们可以从中间件附加的用户信息中获取 userId
+    const userId = req.user?.id; // We can get userId from user information attached by middleware
   
     if (!name || longitude === undefined || latitude === undefined) {
       return res.status(400).json({ error: 'Name and coordinates are required.' });

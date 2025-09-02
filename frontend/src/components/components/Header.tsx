@@ -31,9 +31,9 @@ export function Header() {
     latitude: number;
     longitude: number;
   }) => {
-    // 我们用新的坐标和缩放级别来构建一个新的 URL
+    // We build a new URL with new coordinates and zoom level
     const newUrl = `/explore?lng=${longitude}&lat=${latitude}&zoom=14`;
-    router.push(newUrl); // 命令路由器导航到这个新 URL
+    router.push(newUrl); // Command router to navigate to this new URL
   };
 
   return (

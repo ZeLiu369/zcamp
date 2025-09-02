@@ -338,9 +338,9 @@ export default function LocationDetailPage() {
         <ImagePreview images={location.images} locationId={location.id} />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* --- 左侧主内容区 (2/3 宽度) --- */}
+        {/* --- Left main content area (2/3 width) --- */}
         <div className="md:col-span-2 space-y-8">
-          {/* 地图卡片 */}
+          {/* Map card */}
           <Card>
             <CardHeader>
               <CardTitle>Location Map</CardTitle>
@@ -394,7 +394,7 @@ export default function LocationDetailPage() {
             </Card>
           )}
 
-          {/* "写评论" 卡片 (现在移到了左侧) */}
+          {/* "Write Review" card (now moved to the left) */}
           {user ? (
             <Card>
               <CardHeader>
@@ -425,7 +425,7 @@ export default function LocationDetailPage() {
           )}
         </div>
 
-        {/* --- 右侧评论区 (1/3 宽度) --- */}
+        {/* --- Right review section (1/3 width) --- */}
         <div className="md:col-span-1">
           <Card>
             <CardHeader>
@@ -488,7 +488,7 @@ export default function LocationDetailPage() {
         </div>
       </div>
 
-      {/* 编辑评论的弹窗 (Dialog) - 放在主布局的末尾通常更清晰 */}
+      {/* Edit review dialog - usually clearer to place at the end of main layout */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
