@@ -118,6 +118,7 @@ export default function SignUpPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="pr-10"
                 disabled={isLoading}
+                autoComplete="current-password"
               />
               <button
                 type="button" // Important: type="button" prevents form submission

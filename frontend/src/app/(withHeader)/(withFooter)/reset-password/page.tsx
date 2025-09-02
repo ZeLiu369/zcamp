@@ -82,6 +82,7 @@ function ResetPasswordForm() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
               />
             </div>
             <div className="grid gap-2">
@@ -92,6 +93,7 @@ function ResetPasswordForm() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="current-password"
               />
             </div>
             <Button
