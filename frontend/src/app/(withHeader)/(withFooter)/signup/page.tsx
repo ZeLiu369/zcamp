@@ -15,23 +15,22 @@ import Link from "next/link";
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation"; // Import the router for redirection
 import { Eye, EyeOff } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function SignUpPage() {
   // Step 1: Create state variables to hold the form data and any messages
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const router = useRouter(); // Initialize the router
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Step 2: Create a function to handle the form submission
   const handleSubmit = async (event: FormEvent) => {
     // Prevent the default browser behavior of refreshing the page
     event.preventDefault();
-    setError(null); // Reset errors on new submission
-    setSuccess(null);
+    setIsLoading(true);
 
     try {
       // Step 3: Send the form data to your backend API
@@ -55,17 +54,20 @@ export default function SignUpPage() {
       }
 
       // On success:
-      setSuccess("Registration successful! Redirecting to login...");
+      toast.success(
+        "Registration successful! Please check your email for verification."
+      );
       // Redirect to the login page after a short delay
       setTimeout(() => {
         router.push("/login");
       }, 2000);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError(String(err));
-      }
+    } catch (error: unknown) {
+      toast.error(
+        error instanceof Error ? error.message : "Something went wrong"
+      );
+      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -91,6 +93,7 @@ export default function SignUpPage() {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                disabled={isLoading}
               />
             </div>
             <div className="grid gap-2">
@@ -102,6 +105,7 @@ export default function SignUpPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
               />
             </div>
             <div className="grid gap-2 relative">
@@ -113,6 +117,7 @@ export default function SignUpPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="pr-10"
+                disabled={isLoading}
               />
               <button
                 type="button" // Important: type="button" prevents form submission
@@ -123,17 +128,9 @@ export default function SignUpPage() {
                 {showPassword ? <EyeOff /> : <Eye />}
               </button>
             </div>
-            <Button type="submit" className="w-full">
-              Create an account
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Creating Account..." : "Create an account"}
             </Button>
-
-            {/* Display success or error messages to the user */}
-            {success && (
-              <p className="text-sm text-green-500 text-center">{success}</p>
-            )}
-            {error && (
-              <p className="text-sm text-red-500 text-center">{error}</p>
-            )}
           </form>
           <div className="mt-4 text-center text-sm">
             Already have an account?{" "}
