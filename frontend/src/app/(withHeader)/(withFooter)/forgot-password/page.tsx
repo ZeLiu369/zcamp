@@ -74,6 +74,7 @@ export default function ForgotPasswordPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
+                autoComplete="username"
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>

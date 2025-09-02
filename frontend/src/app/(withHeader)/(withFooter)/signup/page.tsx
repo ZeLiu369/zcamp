@@ -94,6 +94,7 @@ export default function SignUpPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={isLoading}
+                autoComplete="username"
               />
             </div>
             <div className="grid gap-2">
@@ -106,6 +107,7 @@ export default function SignUpPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
+                autoComplete="username"
               />
             </div>
             <div className="grid gap-2 relative">
