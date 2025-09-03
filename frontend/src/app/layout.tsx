@@ -1,9 +1,12 @@
+// In frontend/src/app/layout.tsx
+
+// 1. This file is now a Server Component (no 'use client')
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/app/globals.css";
-import { AuthProvider } from "@/context/auth-provider";
-import { Toaster } from "react-hot-toast";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { Providers } from "./provider"; // <-- 2. Import your new Providers component
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,6 +18,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// 3. This metadata export will now work correctly
 export const metadata: Metadata = {
   title: "CampFinder",
   description: "Discover and review campgrounds across North America.",
@@ -30,12 +34,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <Toaster />
+        {/* 4. Use the Providers component to wrap your layout structure */}
+        <Providers>
           <div className="flex flex-col min-h-screen">
             <main className="flex-1">{children}</main>
           </div>
-        </AuthProvider>
+        </Providers>
       </body>
     </html>
   );
