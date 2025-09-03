@@ -9,24 +9,27 @@ import { InteractiveBackground } from "@/components/ui/InteractiveBackground";
 const featuredCampgrounds = [
   {
     id: "gros-morne",
-    name: "Gros Morne National Park",
-    province: "Newfoundland and Labrador",
+    name: "Trout River Campground",
+    province: "Gros Morne National Park Newfoundland and Labrador",
     rating: 5,
     imageUrl: "/image/gros_morne_camp.jpg",
+    link: "/location/e2b11eba-b3f8-489d-80f8-854d15b8b53d",
   },
   {
     id: "banff",
-    name: "Banff National Park",
-    province: "Alberta",
+    name: "Tunnel Mountain Village I Campground",
+    province: "Banff National Park - Alberta",
     rating: 5,
     imageUrl: "/image/banff_camp.jpg",
+    link: "/location/8bb76cc2-15f6-4141-9f20-5d4418e68495",
   },
   {
-    id: "algonquin",
-    name: "Algonquin Provincial Park",
-    province: "Ontario",
+    id: "Green Point",
+    name: "Green Point Campground",
+    province: "Long Beach - British Columbia",
     rating: 4,
-    imageUrl: "/image/algonquin_camp.jpg",
+    imageUrl: "/image/camp_star.jpg",
+    link: "/location/64f5c7ff-fc6c-402b-b387-d7fd81dee9bf",
   },
 ];
 
@@ -50,44 +53,45 @@ export function Featured() {
             {featuredCampgrounds.map((camp, index) => (
               <FadeIn key={camp.id} delay={index * 0.15}>
                 <CometCard>
-                  <div
-                    className="flex flex-col items-stretch rounded-[16px] border-0 bg-gray-50/70 dark:bg-[#1F2121] p-2 backdrop-blur-sm cursor-pointer hover:shadow-2xl hover:shadow-blue-500/[0.2] transition-shadow duration-300"
-                    style={{
-                      transformStyle: "preserve-3d",
-                      transform: "none",
-                      opacity: 1,
-                    }}
-                  >
-                    {/* image container */}
-                    <div className="mx-2 flex-1">
-                      <div className="relative mt-2 aspect-[3/4] w-full">
-                        <Image
-                          src={camp.imageUrl}
-                          fill
-                          className="absolute inset-0 h-full w-full rounded-[16px] object-cover contrast-90"
-                          alt={`Photo of ${camp.name}`}
-                          priority
-                          style={{
-                            boxShadow: "rgba(0, 0, 0, 0.05) 0px 5px 6px 0px",
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* information container */}
-                    <div className="mt-2 flex-shrink-0 p-4">
-                      {/* name and province */}
-                      <div className="mb-3">
-                        <h3 className="text-lg font-bold text-neutral-700 dark:text-white">
-                          {camp.name}
-                        </h3>
-                        <p className="text-sm text-neutral-500 dark:text-neutral-300 mt-1">
-                          {camp.province}
-                        </p>
+                  <Link href={camp.link} className="block">
+                    <div
+                      className="flex flex-col items-stretch rounded-[16px] border-0 bg-gray-50/70 dark:bg-[#1F2121] p-2 backdrop-blur-sm cursor-pointer hover:shadow-2xl hover:shadow-blue-500/[0.2] transition-shadow duration-300"
+                      style={{
+                        transformStyle: "preserve-3d",
+                        transform: "none",
+                        opacity: 1,
+                      }}
+                    >
+                      {/* image container */}
+                      <div className="mx-2 flex-1">
+                        <div className="relative mt-2 aspect-[3/4] w-full">
+                          <Image
+                            src={camp.imageUrl}
+                            fill
+                            className="absolute inset-0 h-full w-full rounded-[16px] object-cover contrast-90"
+                            alt={`Photo of ${camp.name}`}
+                            priority
+                            style={{
+                              boxShadow: "rgba(0, 0, 0, 0.05) 0px 5px 6px 0px",
+                            }}
+                          />
+                        </div>
                       </div>
 
-                      {/* rating and button */}
-                      <div className="flex justify-between items-center">
+                      {/* information container */}
+                      <div className="mt-2 flex-shrink-0 p-4">
+                        {/* name and province */}
+                        <div className="mb-3">
+                          <h3 className="text-lg font-bold text-neutral-700 dark:text-white">
+                            {camp.name}
+                          </h3>
+                          <p className="text-sm text-neutral-500 dark:text-neutral-300 mt-1">
+                            {camp.province}
+                          </p>
+                        </div>
+
+                        {/* rating and button */}
+                        {/* <div className="flex justify-between items-center">
                         {/* <div className="flex items-center">
                           {Array.from({ length: 5 }).map((_, i) => (
                             <Star
@@ -101,15 +105,22 @@ export function Featured() {
                           ))}
                         </div> */}
 
-                        <Link
+                        {/* <Link
                           href={`/location/${camp.id}`}
                           className="px-3 py-1.5 rounded-lg bg-black dark:bg-white dark:text-black text-white text-xs font-semibold hover:opacity-90 transition-opacity"
                         >
                           View Details
                         </Link>
+                      </div> */}
+
+                        <div className="flex justify-end items-center">
+                          <span className="px-3 py-1.5 rounded-lg bg-black dark:bg-white dark:text-black text-white text-xs font-semibold hover:opacity-90 transition-opacity">
+                            View Details
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 </CometCard>
               </FadeIn>
             ))}

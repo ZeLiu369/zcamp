@@ -37,7 +37,7 @@ export function Hero() {
           fill
           className="object-cover"
           priority
-          quality={80}
+          // quality={80}
         />
         <div className="absolute inset-0 bg-black/60" />
       </div>
