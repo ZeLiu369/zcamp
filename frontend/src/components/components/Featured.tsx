@@ -3,7 +3,7 @@ import { Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { FadeIn } from "@/components/ui/FadeIn";
-import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card";
+import { CometCard } from "@/components/ui/comet-card";
 import { InteractiveBackground } from "@/components/ui/InteractiveBackground";
 
 const featuredCampgrounds = [
@@ -49,59 +49,68 @@ export function Featured() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredCampgrounds.map((camp, index) => (
               <FadeIn key={camp.id} delay={index * 0.15}>
-                <CardContainer className="inter-var">
-                  <CardBody className="bg-gray-50/70 backdrop-blur-sm relative group/card dark:hover:shadow-2xl dark:hover:shadow-blue-500/[0.2] dark:bg-black/60 dark:border-white/[0.2] border-black/[0.1] w-full h-auto rounded-xl p-6 border">
-                    <CardItem
-                      translateZ="50"
-                      className="text-xl font-bold text-neutral-700 dark:text-white"
-                    >
-                      {camp.name}
-                    </CardItem>
-
-                    <CardItem
-                      as="p"
-                      translateZ="60"
-                      className="text-neutral-500 text-sm max-w-sm mt-2 dark:text-neutral-300"
-                    >
-                      {camp.province}
-                    </CardItem>
-
-                    <CardItem translateZ="100" className="w-full mt-4">
-                      <Image
-                        src={camp.imageUrl}
-                        height={1000}
-                        width={1000}
-                        className="h-60 w-full object-cover rounded-xl group-hover/card:shadow-xl"
-                        alt={`Photo of ${camp.name}`}
-                        priority
-                      />
-                    </CardItem>
-
-                    <div className="flex justify-between items-center mt-8">
-                      <CardItem translateZ={20} className="flex items-center">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={`star-${i}-${camp.id}`}
-                            className={`h-5 w-5 ${
-                              i < camp.rating
-                                ? "text-yellow-400 fill-yellow-400"
-                                : "text-gray-300"
-                            }`}
-                          />
-                        ))}
-                      </CardItem>
-
-                      <CardItem
-                        translateZ={20}
-                        as={Link}
-                        href={`/location/${camp.id}`}
-                        className="px-4 py-2 rounded-xl bg-black dark:bg-white dark:text-black text-white text-xs font-bold"
-                      >
-                        View Details
-                      </CardItem>
+                <CometCard>
+                  <div
+                    className="flex flex-col items-stretch rounded-[16px] border-0 bg-gray-50/70 dark:bg-[#1F2121] p-2 backdrop-blur-sm cursor-pointer hover:shadow-2xl hover:shadow-blue-500/[0.2] transition-shadow duration-300"
+                    style={{
+                      transformStyle: "preserve-3d",
+                      transform: "none",
+                      opacity: 1,
+                    }}
+                  >
+                    {/* 图片容器 */}
+                    <div className="mx-2 flex-1">
+                      <div className="relative mt-2 aspect-[3/4] w-full">
+                        <Image
+                          src={camp.imageUrl}
+                          fill
+                          className="absolute inset-0 h-full w-full rounded-[16px] object-cover contrast-90"
+                          alt={`Photo of ${camp.name}`}
+                          priority
+                          style={{
+                            boxShadow: "rgba(0, 0, 0, 0.05) 0px 5px 6px 0px",
+                          }}
+                        />
+                      </div>
                     </div>
-                  </CardBody>
-                </CardContainer>
+
+                    {/* 信息容器 */}
+                    <div className="mt-2 flex-shrink-0 p-4">
+                      {/* 名称和省份 */}
+                      <div className="mb-3">
+                        <h3 className="text-lg font-bold text-neutral-700 dark:text-white">
+                          {camp.name}
+                        </h3>
+                        <p className="text-sm text-neutral-500 dark:text-neutral-300 mt-1">
+                          {camp.province}
+                        </p>
+                      </div>
+
+                      {/* 评分和按钮 */}
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={`star-${i}-${camp.id}`}
+                              className={`h-4 w-4 ${
+                                i < camp.rating
+                                  ? "text-yellow-400 fill-yellow-400"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          ))}
+                        </div>
+
+                        <Link
+                          href={`/location/${camp.id}`}
+                          className="px-3 py-1.5 rounded-lg bg-black dark:bg-white dark:text-black text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+                        >
+                          View Details
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </CometCard>
               </FadeIn>
             ))}
           </div>
