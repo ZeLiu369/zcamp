@@ -23,6 +23,24 @@ interface AddressSearchProps {
   onSelect: (coords: { latitude: number; longitude: number }) => void;
 }
 
+function parseCoordinates(
+  input: string
+): { latitude: number; longitude: number } | null {
+  // 这个正则表达式会匹配 "lat, lng" 或 "lat lng" 格式的坐标
+  const regex = /^\s*(-?\d{1,3}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)\s*$/;
+  const match = input.match(regex);
+
+  if (match) {
+    const lat = parseFloat(match[1]);
+    const lng = parseFloat(match[2]);
+    // 基础的有效性检查
+    if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+      return { latitude: lat, longitude: lng };
+    }
+  }
+  return null;
+}
+
 export function AddressSearch({
   query,
   setQuery,
@@ -36,12 +54,25 @@ export function AddressSearch({
   const debouncedQuery = useDebounce(query, 300);
 
   useEffect(() => {
-    if (debouncedQuery.length < 3) {
-      setSuggestions([]);
-      return;
-    }
+    // --- 这是被修改的核心逻辑 ---
+    // 1. 尝试将用户的输入解析为坐标
+    const coords = parseCoordinates(debouncedQuery);
 
-    async function fetchSuggestions() {
+    if (coords) {
+      // 2. 如果成功解析为坐标，直接调用 onSelect，并关闭建议列表
+      onSelect(coords);
+      setSuggestions([]);
+      setIsOpen(false);
+    } else if (debouncedQuery.length >= 3) {
+      // 3. 如果不是坐标，并且长度足够，则执行地址搜索
+      fetchAddressSuggestions();
+    } else {
+      // 4. 否则，清空建议
+      setSuggestions([]);
+    }
+    // --- 结束修改部分 ---
+
+    async function fetchAddressSuggestions() {
       setIsLoading(true);
       try {
         const response = await fetch(
@@ -53,9 +84,7 @@ export function AddressSearch({
         if (Array.isArray(data)) {
           setSuggestions(data);
         } else {
-          // If it's not an array (e.g., it's an error object), set suggestions to an empty array to prevent a crash.
           setSuggestions([]);
-          console.error("API did not return an array:", data);
         }
       } catch (error) {
         console.error("Failed to fetch address suggestions:", error);
@@ -64,9 +93,7 @@ export function AddressSearch({
         setIsLoading(false);
       }
     }
-
-    fetchSuggestions();
-  }, [debouncedQuery]);
+  }, [debouncedQuery, onSelect]); // onSelect 现在是依赖项
 
   const handleSelect = (suggestion: Suggestion) => {
     setQuery(suggestion.place_name); // Update input with full address
