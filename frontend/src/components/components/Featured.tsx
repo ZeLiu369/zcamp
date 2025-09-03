@@ -1,16 +1,13 @@
 // In src/components/Featured.tsx
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
 import { Star } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { FadeIn } from "@/components/ui/FadeIn";
-// Placeholder data until we connect to our API
+// 1. Import the new 3D Card components
+import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card";
+
+// Your placeholder data remains the same
 const featuredCampgrounds = [
   {
     id: "gros-morne",
@@ -37,55 +34,76 @@ const featuredCampgrounds = [
 
 export function Featured() {
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
+    <section className="w-full py-12 md:py-24 lg:py-32 bg-white dark:bg-black">
       <div className="container mx-auto px-4 md:px-6">
-        {/* 2. Wrap the title section in FadeIn */}
         <FadeIn>
           <div className="text-center space-y-3 mb-12">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-black dark:text-white">
               Featured Campgrounds
             </h2>
-            <p className="max-w-[700px] mx-auto text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            <p className="max-w-[700px] mx-auto text-gray-500 md:text-xl/relaxed dark:text-gray-400">
               Discover top-rated locations shared by our community.
             </p>
           </div>
         </FadeIn>
 
+        {/* 2. Replace the old grid with the new 3D Card logic */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {/* 3. Wrap each Card in FadeIn and add a staggered delay */}
           {featuredCampgrounds.map((camp, index) => (
-            <FadeIn key={camp.name} delay={index * 0.15}>
-              <Card key={camp.id} className="p-0 flex flex-col">
-                <CardHeader className="p-0 relative h-60 rounded-t-xl overflow-hidden">
-                  <Image
-                    src={camp.imageUrl}
-                    alt={`Image of ${camp.name}`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    priority={true}
-                  />
-                </CardHeader>
-                <CardContent className="p-6">
-                  <CardTitle>{camp.name}</CardTitle>
-                  <CardDescription className="mt-1">
+            <FadeIn key={camp.id} delay={index * 0.15}>
+              <CardContainer className="inter-var">
+                <CardBody className="bg-gray-50 relative group/card dark:hover:shadow-2xl dark:hover:shadow-blue-500/[0.2] dark:bg-black dark:border-white/[0.2] border-black/[0.1] w-full h-auto rounded-xl p-6 border">
+                  <CardItem
+                    translateZ="50"
+                    className="text-xl font-bold text-neutral-600 dark:text-white"
+                  >
+                    {camp.name}
+                  </CardItem>
+
+                  <CardItem
+                    as="p"
+                    translateZ="60"
+                    className="text-neutral-500 text-sm max-w-sm mt-2 dark:text-neutral-300"
+                  >
                     {camp.province}
-                  </CardDescription>
-                  <div className="flex items-center mt-4">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={`star-${star}-${camp.id}`}
-                        className={`h-5 w-5 ${
-                          star < camp.rating
-                            ? "text-yellow-400 fill-yellow-400"
-                            : "text-gray-300"
-                        }`}
-                        aria-hidden="true"
-                      />
-                    ))}
+                  </CardItem>
+
+                  <CardItem translateZ="100" className="w-full mt-4">
+                    <Image
+                      src={camp.imageUrl}
+                      height="1000"
+                      width="1000"
+                      className="h-60 w-full object-cover rounded-xl group-hover/card:shadow-xl"
+                      alt={`Photo of ${camp.name}`}
+                      priority
+                    />
+                  </CardItem>
+
+                  <div className="flex justify-between items-center mt-8">
+                    <CardItem translateZ={20} className="flex items-center">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={`star-${i}-${camp.id}`}
+                          className={`h-5 w-5 ${
+                            i < camp.rating
+                              ? "text-yellow-400 fill-yellow-400"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </CardItem>
+
+                    <CardItem
+                      translateZ={20}
+                      as={Link}
+                      href={`/location/${camp.id}`} // Link to the detail page
+                      className="px-4 py-2 rounded-xl bg-black dark:bg-white dark:text-black text-white text-xs font-bold"
+                    >
+                      View Details
+                    </CardItem>
                   </div>
-                </CardContent>
-              </Card>
+                </CardBody>
+              </CardContainer>
             </FadeIn>
           ))}
         </div>

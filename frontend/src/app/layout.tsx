@@ -1,6 +1,6 @@
 // In frontend/src/app/layout.tsx
 
-// 1. This file is now a Server Component (no 'use client')
+// 1. This file is now a Server Component (no client directive)
 
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
