@@ -1,10 +1,10 @@
 // src/components/Featured.tsx
-import { Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { CometCard } from "@/components/ui/comet-card";
 import { InteractiveBackground } from "@/components/ui/InteractiveBackground";
+// import { Star } from "lucide-react";
 
 const featuredCampgrounds = [
   {
@@ -58,7 +58,7 @@ export function Featured() {
                       opacity: 1,
                     }}
                   >
-                    {/* 图片容器 */}
+                    {/* image container */}
                     <div className="mx-2 flex-1">
                       <div className="relative mt-2 aspect-[3/4] w-full">
                         <Image
@@ -74,9 +74,9 @@ export function Featured() {
                       </div>
                     </div>
 
-                    {/* 信息容器 */}
+                    {/* information container */}
                     <div className="mt-2 flex-shrink-0 p-4">
-                      {/* 名称和省份 */}
+                      {/* name and province */}
                       <div className="mb-3">
                         <h3 className="text-lg font-bold text-neutral-700 dark:text-white">
                           {camp.name}
@@ -86,9 +86,9 @@ export function Featured() {
                         </p>
                       </div>
 
-                      {/* 评分和按钮 */}
+                      {/* rating and button */}
                       <div className="flex justify-between items-center">
-                        <div className="flex items-center">
+                        {/* <div className="flex items-center">
                           {Array.from({ length: 5 }).map((_, i) => (
                             <Star
                               key={`star-${i}-${camp.id}`}
@@ -99,7 +99,7 @@ export function Featured() {
                               }`}
                             />
                           ))}
-                        </div>
+                        </div> */}
 
                         <Link
                           href={`/location/${camp.id}`}

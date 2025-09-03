@@ -50,9 +50,16 @@ export function AddressSearch({
           }/api/geocode?query=${encodeURIComponent(debouncedQuery)}`
         );
         const data = await response.json();
-        setSuggestions(data);
+        if (Array.isArray(data)) {
+          setSuggestions(data);
+        } else {
+          // If it's not an array (e.g., it's an error object), set suggestions to an empty array to prevent a crash.
+          setSuggestions([]);
+          console.error("API did not return an array:", data);
+        }
       } catch (error) {
         console.error("Failed to fetch address suggestions:", error);
+        setSuggestions([]);
       } finally {
         setIsLoading(false);
       }
