@@ -20,6 +20,7 @@ import { Star } from "lucide-react";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { debounce, throttle } from "lodash";
+import { MapStyleControl } from "@/components/components/MayStyleControl";
 
 // Define a type for our location data for TypeScript safety
 type Location = {
@@ -129,6 +130,10 @@ export default function ExplorePage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const [mapStyle, setMapStyle] = useState(
+    "mapbox://styles/mapbox/streets-v12"
+  );
 
   // 1. Use throttle to limit handleMapMove call frequency
   const handleMapMoveThrottled = useMemo(
@@ -329,11 +334,11 @@ export default function ExplorePage() {
               ? Number(searchParams.get("zoom"))
               : 3,
           }}
-          mapStyle="mapbox://styles/mapbox/streets-v12"
           projection="mercator"
           //onMove={handleMapMove}
           onMoveEnd={handleMapMove}
           onLoad={handleMapMove}
+          mapStyle={mapStyle}
         >
           <NavigationControl position="bottom-right" />
           <GeolocateControl position="bottom-right" />
@@ -454,6 +459,8 @@ export default function ExplorePage() {
             </Popup>
           )}
         </Map>
+
+        <MapStyleControl currentStyle={mapStyle} onStyleChange={setMapStyle} />
       </div>
     </div>
   );
