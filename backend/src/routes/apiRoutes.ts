@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
 import { Pool } from 'pg';
-import { authMiddleware, AuthRequest } from '#/middlewares/authMiddleware.js';
+import { authMiddleware } from '#/middlewares/authMiddleware.js';
 
 const pool = new Pool({
     user: 'postgres',      
@@ -166,7 +166,7 @@ apiRoutes.get('/locations/:id', async (req: Request, res: Response): Promise<any
     }
   });
 
-apiRoutes.delete('/locations/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+apiRoutes.delete('/locations/:id', authMiddleware, async (req: Request, res: Response): Promise<void> => {
     const { id: locationId } = req.params;
     const userId = req.user?.id;
     const userRole = req.user?.role;
@@ -216,7 +216,7 @@ apiRoutes.delete('/locations/:id', authMiddleware, async (req: AuthRequest, res:
     }
   });
 
-apiRoutes.put('/locations/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+apiRoutes.put('/locations/:id', authMiddleware, async (req: Request, res: Response): Promise<void> => {
     const { id: locationId } = req.params;
     const { name, latitude, longitude } = req.body;
     const userId = req.user?.id;

@@ -1,6 +1,6 @@
-import { Router, Response } from 'express';
+import { Router, Request,Response } from 'express';
 import { Pool } from 'pg';
-import { authMiddleware, AuthRequest } from '#/middlewares/authMiddleware.js';
+import { authMiddleware } from '#/middlewares/authMiddleware.js';
 import bcrypt from 'bcryptjs';
 
 const router = Router();
@@ -13,7 +13,7 @@ const pool = new Pool({
 });
 
 // GET /api/profile/me - Get the logged-in user's profile data
-router.get('/me', authMiddleware, async (req: AuthRequest, res: Response): Promise<any> => {
+router.get('/me', authMiddleware, async (req: Request, res: Response): Promise<any> => {
     const userId = req.user?.id;
 
     if (!userId) {
@@ -72,7 +72,7 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response): Promi
 // ... other imports and the GET /me route ...
 
 // DELETE /api/profile/me - Delete the logged-in user's account
-router.delete('/me', authMiddleware, async (req: AuthRequest, res: Response): Promise<any> => {
+router.delete('/me', authMiddleware, async (req: Request, res: Response): Promise<any> => {
     const userId = req.user?.id;
     const { password } = req.body; // The user must provide their password to confirm
 

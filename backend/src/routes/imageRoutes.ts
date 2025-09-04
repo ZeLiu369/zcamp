@@ -1,8 +1,8 @@
 // In backend/src/imageRoutes.ts
 
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import multer from 'multer';
-import { authMiddleware, AuthRequest } from '#/middlewares/authMiddleware.js'
+import { authMiddleware } from '#/middlewares/authMiddleware.js'
 import { ImageService } from '#/services/imageService.js';
 
 const router = Router();
@@ -31,7 +31,7 @@ router.post(
     '/locations/:id/images', 
     authMiddleware, 
     upload.array('images', 10), // 'images' is the form field name, 10 is the maximum number
-    async (req: AuthRequest, res: Response): Promise<any> => {
+    async (req: Request, res: Response): Promise<any> => {
         
         try {
             const { id: locationId } = req.params;
@@ -72,7 +72,7 @@ router.post(
 
 // ... (other routes)
 
-router.delete('/images/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<any> => {
+router.delete('/images/:id', authMiddleware, async (req: Request, res: Response): Promise<any> => {
     try {
         const { id: imageId } = req.params;
         const userId = req.user?.id;

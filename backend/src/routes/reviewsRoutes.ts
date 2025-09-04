@@ -1,6 +1,6 @@
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import { Pool } from 'pg';
-import { authMiddleware, AuthRequest } from '#/middlewares/authMiddleware.js';
+import { authMiddleware } from '#/middlewares/authMiddleware.js';
 
 const reviewRoutes = Router();
 
@@ -13,7 +13,7 @@ const pool = new Pool({
 });
 
 // POST /api/reviews - Create a new review
-reviewRoutes.post('/', authMiddleware, async (req: AuthRequest, res: Response): Promise<any> => {
+reviewRoutes.post('/', authMiddleware, async (req: Request, res: Response): Promise<any> => {
     const { rating, comment, locationId } = req.body;
     const userId = req.user?.id;
 
@@ -49,7 +49,7 @@ reviewRoutes.post('/', authMiddleware, async (req: AuthRequest, res: Response): 
     }
 });
 
-reviewRoutes.delete('/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<any> => {
+reviewRoutes.delete('/:id', authMiddleware, async (req: Request, res: Response): Promise<any> => {
     const { id: reviewId } = req.params; // The ID of the review to delete
     const userId = req.user?.id;         // The ID of the user making the request
     const userRole = req.user?.role; 
@@ -99,7 +99,7 @@ reviewRoutes.delete('/:id', authMiddleware, async (req: AuthRequest, res: Respon
 });
 
 
-reviewRoutes.put('/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<any> => {
+reviewRoutes.put('/:id', authMiddleware, async (req: Request, res: Response): Promise<any> => {
     const { id: reviewId } = req.params;      // The ID of the review to edit
     const { rating, comment } = req.body;   // The new data from the form
     const userId = req.user?.id;              // The ID of the user making the request

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { Pool } from 'pg';
-import { authMiddleware, AuthRequest } from '#/middlewares/authMiddleware.js'; 
+import { authMiddleware } from '#/middlewares/authMiddleware.js'; 
 
 // Database connection configuration
 const pool = new Pool({
@@ -53,7 +53,7 @@ locationRoutes.get('/locations', async (req: Request, res: Response) => {
   }
 });
 
-locationRoutes.post('/locations', authMiddleware, async (req: AuthRequest, res: Response): Promise<any> => {
+locationRoutes.post('/locations', authMiddleware, async (req: Request, res: Response): Promise<any> => {
     const { name, longitude, latitude } = req.body;
     const userId = req.user?.id; // We can get userId from user information attached by middleware
   

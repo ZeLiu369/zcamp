@@ -1,16 +1,8 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 
-// Extend Express's Request type to allow attaching user information
-export interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    username: string;
-    role: string;
-  };
-}
 
-export const authMiddleware: RequestHandler = (req: AuthRequest, res: Response, next: NextFunction): void => {
+export const authMiddleware: RequestHandler = (req: Request, res: Response, next: NextFunction): void => {
   const token = (req as any).cookies?.authToken;
 
   if (!token) {
