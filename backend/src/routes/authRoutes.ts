@@ -336,7 +336,7 @@ authRoutes.post('/verify-email', async (req: Request, res: Response): Promise<an
 
 
 // The route to start the Google authentication process
-authRoutes.get('/google', passport.authenticate('google'));
+authRoutes.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 // The route Google redirects back to
 authRoutes.get('/google/callback', passport.authenticate('google', { failureRedirect: '/login' }),
@@ -345,7 +345,7 @@ authRoutes.get('/google/callback', passport.authenticate('google', { failureRedi
     const user = req.user as any;
 
     console.log('query.state =', req.query.state);
-    console.log('session bag =', req.session && req.session['oauth2:state']);
+    console.log('session bag =', req.session && req.session['oauth2:state' as keyof typeof req.session]);
     
     // Create a JWT for our user
     const payload = { user: { id: user.id, username: user.username, role: user.role } };
@@ -359,7 +359,7 @@ authRoutes.get('/google/callback', passport.authenticate('google', { failureRedi
         maxAge: 3600000
     });
 
-    req.logOut((err) => {
+    req.logout((err) => {
         if (err) {
             console.error("Error logging out from passport session:", err);
         }
