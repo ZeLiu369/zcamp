@@ -9,8 +9,8 @@ passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID as string,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     callbackURL: "/api/auth/google/callback",
-    scope: ['profile', 'email'],
-    state : true
+    state : true,
+    pkce: true
 },
 async (accessToken, refreshToken, profile, done) => {
     const client = await pool.connect();
@@ -23,8 +23,10 @@ async (accessToken, refreshToken, profile, done) => {
         }
 
         // If not, check if they exist by email
-        const email = profile.emails?.[0].value;
-        if (email) {
+        const emailObj = profile.emails?.[0];
+        const email = emailObj?.value?.toLowerCase();
+        const verified = emailObj?.verified === true;
+        if (email && verified) {
             userResult = await client.query('SELECT * FROM users WHERE email = $1', [email]);
             if (userResult.rows.length > 0) {
                 // If user exists by email, link their Google ID
