@@ -12,6 +12,7 @@ import apiRoutes from '#/routes/apiRoutes.js';
 import reviewsRoutes from '#/routes/reviewsRoutes.js';
 import profileRoutes from '#/routes/profileRoutes.js';
 import imageRoutes from '#/routes/imageRoutes.js';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -25,6 +26,8 @@ if (!process.env.SESSION_SECRET) {
 
 const app = express();
 const port = process.env.PORT || 3002;
+
+app.use(helmet());
 // --- Middlewares ---
 // Enable Cross-Origin Resource Sharing so your frontend can call the backend
 app.use(cors({
