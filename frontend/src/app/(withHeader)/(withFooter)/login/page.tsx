@@ -16,11 +16,11 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-provider";
 import toast from "react-hot-toast";
+import { GoogleIcon } from "@/components/icons/GoogleIcon";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
@@ -28,7 +28,6 @@ export default function LoginPage() {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    setError(null);
     setIsLoading(true);
 
     try {
@@ -111,12 +110,23 @@ export default function LoginPage() {
                 "Login"
               )}
             </Button>
-
-            {/* Display error message */}
-            {error && (
-              <p className="text-sm text-red-500 text-center">{error}</p>
-            )}
           </form>
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-muted-foreground dark:bg-black">
+                Or continue with
+              </span>
+            </div>
+          </div>
+          <Button asChild variant="outline" className="w-full">
+            <a href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/google`}>
+              <GoogleIcon className="mr-2 h-4 w-4" />
+              Sign in with Google
+            </a>
+          </Button>
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{" "}
             <Link href="/signup" className="underline">

@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { emailService } from '#/services/emailService.js'; 
+import passport from 'passport';
 
 // Re-using the same pool configuration
 const pool = new Pool({
@@ -332,5 +333,48 @@ authRoutes.post('/verify-email', async (req: Request, res: Response): Promise<an
         client.release();
     }
 });
+
+
+// The route to start the Google authentication process
+authRoutes.get('/google', passport.authenticate('google'));
+
+// The route Google redirects back to
+authRoutes.get('/google/callback', passport.authenticate('google', { failureRedirect: '/login' }),
+  (req, res) => {
+    // Successful authentication
+    const user = req.user as any;
+
+    console.log('query.state =', req.query.state);
+    console.log('session bag =', req.session && req.session['oauth2:state']);
+    
+    // Create a JWT for our user
+    const payload = { user: { id: user.id, username: user.username, role: user.role } };
+    const token = jwt.sign(payload, process.env.JWT_SECRET as string, { expiresIn: '1h' });
+
+    // Set the cookie
+    res.cookie('authToken', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 3600000
+    });
+
+    req.logOut((err) => {
+        if (err) {
+            console.error("Error logging out from passport session:", err);
+        }
+
+        // 2. destroy the entire express-session
+        req.session.destroy((err) => {
+            if (err) {
+                console.error("Error destroying session:", err);
+            }
+            res.clearCookie('connect.sid'); 
+            // 3. redirect to the frontend after all cleanup is done
+            res.redirect(process.env.FRONTEND_URL ||  'http://localhost:3000');
+        });
+    });
+  }
+);
 
 export default authRoutes;

@@ -20,6 +20,11 @@ router.get('/me', authMiddleware, async (req: Request, res: Response): Promise<a
         return res.status(401).json({ error: 'User not authenticated.' });
     }
 
+    console.log("====================================");
+    console.log("SERVER-SIDE SESSION DATA:");
+    console.dir(req.session, { depth: null }); // 使用 console.dir 可以更好地显示对象结构
+    console.log("====================================");
+
     try {
         const client = await pool.connect();
         try {

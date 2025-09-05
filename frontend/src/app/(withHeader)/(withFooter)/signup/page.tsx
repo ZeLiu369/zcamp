@@ -16,6 +16,7 @@ import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation"; // Import the router for redirection
 import { Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
+import { GoogleIcon } from "@/components/icons/GoogleIcon";
 
 export default function SignUpPage() {
   // Step 1: Create state variables to hold the form data and any messages
@@ -147,6 +148,23 @@ export default function SignUpPage() {
               {isLoading ? "Creating Account..." : "Create an account"}
             </Button>
           </form>
+
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-muted-foreground dark:bg-black">
+                Or continue with
+              </span>
+            </div>
+          </div>
+          <Button asChild variant="outline" className="w-full">
+            <a href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/google`}>
+              <GoogleIcon className="mr-2 h-4 w-4" />
+              Sign in with Google
+            </a>
+          </Button>
           <div className="mt-4 text-center text-sm">
             Already have an account?{" "}
             <Link href="/login" className="underline">
