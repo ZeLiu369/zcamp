@@ -384,4 +384,59 @@ authRoutes.get('/google/callback', passport.authenticate('google', { failureRedi
   }
 );
 
+
+// start login (optional: same as Google route)
+authRoutes.get('/twitter',
+    passport.authenticate('twitter', {
+      // only the minimum set for login; need to add 'offline.access' for refresh token
+      scope: ['users.read', 'tweet.read']
+    })
+  );
+  
+  // same as Google route
+  authRoutes.get('/twitter/callback',
+    passport.authenticate('twitter', { failureRedirect: '/login' }),
+    (req, res) => {
+      // Successful authentication
+      const user = req.user as any;
+  
+      console.log('query.state =', req.query.state);
+      console.log('session bag =', req.session && req.session['oauth2:state' as keyof typeof req.session]);
+  
+      // Create a JWT for our user
+      const payload = { user: { id: user.id, username: user.username, role: user.role } };
+      const token = jwt.sign(payload, process.env.JWT_SECRET as string, { expiresIn: '1h' });
+  
+      // Set the cookie
+      res.cookie('authToken', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 3600000
+      });
+  
+      // same as Google route
+      req.logout((err) => {
+        if (err) {
+          console.error('Error logging out from passport session:', err);
+        }
+  
+        const sidName = process.env.NODE_ENV === 'production' ? '__Host-sid' : 'sid';
+  
+        req.session.destroy((err) => {
+          if (err) {
+            console.error('Error destroying session:', err);
+          }
+          res.clearCookie(sidName, {
+            path: '/',
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production'
+          });
+          res.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
+        });
+      });
+    }
+  );
+  
 export default authRoutes;

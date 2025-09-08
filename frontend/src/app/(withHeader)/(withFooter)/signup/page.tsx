@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation"; // Import the router for redirectio
 import { Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import { GoogleIcon } from "@/components/icons/GoogleIcon";
+import { XIcon } from "@/components/icons/XIcon";
 
 export default function SignUpPage() {
   // Step 1: Create state variables to hold the form data and any messages
@@ -163,6 +164,14 @@ export default function SignUpPage() {
             <a href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/google`}>
               <GoogleIcon className="mr-2 h-4 w-4" />
               Sign in with Google
+            </a>
+          </Button>
+          <Button asChild variant="outline" className="w-full">
+            <a
+              href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/twitter`}
+            >
+              <XIcon className="mr-2 h-4 w-4" />
+              Sign in with X
             </a>
           </Button>
           <div className="mt-4 text-center text-sm">
