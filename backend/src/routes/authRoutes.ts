@@ -364,12 +364,19 @@ authRoutes.get('/google/callback', passport.authenticate('google', { failureRedi
             console.error("Error logging out from passport session:", err);
         }
 
+        const sidName = process.env.NODE_ENV === 'production' ? '__Host-sid' : 'sid';
+
         // 2. destroy the entire express-session
         req.session.destroy((err) => {
             if (err) {
                 console.error("Error destroying session:", err);
             }
-            res.clearCookie('connect.sid'); 
+            res.clearCookie(sidName, {
+                path: '/',
+                httpOnly: true,
+                sameSite: 'lax',
+                secure: process.env.NODE_ENV === 'production'
+              });
             // 3. redirect to the frontend after all cleanup is done
             res.redirect(process.env.FRONTEND_URL ||  'http://localhost:3000');
         });

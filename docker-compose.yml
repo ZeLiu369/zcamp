@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   postgres-gis:
     image: postgis/postgis:16-3.4 # Official PostGIS image
@@ -13,5 +12,22 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data # Persist data
 
+  redis:
+    image: redis:7-alpine
+    container_name: zcamp_redis_session_store
+    command: ["redis-server", "--port", "6380", "--appendonly", "yes"]
+    ports:
+      - "127.0.0.1:6380:6380"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   pg_data:
+    external: true
+    name: nationalparksyelp_pg_data
+  redis_data:
