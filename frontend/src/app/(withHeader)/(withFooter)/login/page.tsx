@@ -18,6 +18,7 @@ import { useAuth } from "@/context/auth-provider";
 import toast from "react-hot-toast";
 import { GoogleIcon } from "@/components/icons/GoogleIcon";
 import { XIcon } from "@/components/icons/XIcon";
+import { GitHubIcon } from "@/components/icons/GitHubIcon";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -134,6 +135,12 @@ export default function LoginPage() {
             >
               <XIcon className="mr-2 h-4 w-4" />
               Sign in with X
+            </a>
+          </Button>
+          <Button asChild variant="outline" className="w-full mt-2">
+            <a href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/github`}>
+              <GitHubIcon className="mr-2 h-4 w-4" />
+              Sign in with GitHub
             </a>
           </Button>
           <div className="mt-4 text-center text-sm">
