@@ -4,7 +4,7 @@
   "main": "dist/app.js",
   "type": "module",
   "imports": {
-    "#/*": "./dist/*"
+    "#app/*": "./dist/*"
   },
   "exports": "./dist/app.js",
   "scripts": {

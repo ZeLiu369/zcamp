@@ -33,7 +33,7 @@
     "forceConsistentCasingInFileNames": true,// Force consistent file name casing, avoid issues on different operating systems.
     "baseUrl": ".",                                  /* Specify the base directory to resolve non-relative module names. */
     "paths": {
-      "#/*": ["./src/*"]
+      "#app/*": ["./src/*"]
     },  
   },
   "include": ["src/**/*"], // Only compile files in src directory.

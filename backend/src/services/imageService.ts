@@ -1,6 +1,6 @@
 import crypto from 'crypto';
-import { pool } from '#/lib/db.js';
-import { s3Client, BUCKET_NAME } from '#/lib/s3.js';
+import { pool } from '#app/lib/db.js';
+import { s3Client, BUCKET_NAME } from '#app/lib/s3.js';
 import { 
     PutObjectCommand, 
     DeleteObjectCommand 

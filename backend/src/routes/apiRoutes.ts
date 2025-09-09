@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
 import { Pool } from 'pg';
-import { authMiddleware } from '#/middlewares/authMiddleware.js';
+import { authMiddleware } from '#app/middlewares/authMiddleware.js';
 
 const pool = new Pool({
     user: 'postgres',      

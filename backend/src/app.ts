@@ -4,14 +4,14 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import passport from 'passport';
-import '#/services/passport-setup.js'; // IMPORTANT: Import the setup file
+import '#app/services/passport-setup.js'; // IMPORTANT: Import the setup file
 
-import locationRoutes from '#/routes/locationRoutes.js'; 
-import authRoutes from '#/routes/authRoutes.js';
-import apiRoutes from '#/routes/apiRoutes.js';
-import reviewsRoutes from '#/routes/reviewsRoutes.js';
-import profileRoutes from '#/routes/profileRoutes.js';
-import imageRoutes from '#/routes/imageRoutes.js';
+import locationRoutes from '#app/routes/locationRoutes.js'; 
+import authRoutes from '#app/routes/authRoutes.js';
+import apiRoutes from '#app/routes/apiRoutes.js';
+import reviewsRoutes from '#app/routes/reviewsRoutes.js';
+import profileRoutes from '#app/routes/profileRoutes.js';
+import imageRoutes from '#app/routes/imageRoutes.js';
 import helmet from 'helmet';
 
 import { createClient as createRedisClient } from 'redis'

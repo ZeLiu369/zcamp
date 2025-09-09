@@ -2,8 +2,8 @@
 
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
-import { authMiddleware } from '#/middlewares/authMiddleware.js'
-import { ImageService } from '#/services/imageService.js';
+import { authMiddleware } from '#app/middlewares/authMiddleware.js'
+import { ImageService } from '#app/services/imageService.js';
 
 const router = Router();
 

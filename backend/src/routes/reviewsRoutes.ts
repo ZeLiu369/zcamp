@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { Pool } from 'pg';
-import { authMiddleware } from '#/middlewares/authMiddleware.js';
+import { authMiddleware } from '#app/middlewares/authMiddleware.js';
 
 const reviewRoutes = Router();
 
