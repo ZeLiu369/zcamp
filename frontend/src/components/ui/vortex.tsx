@@ -31,7 +31,7 @@ export const Vortex = ({
   className,
   containerClassName,
   particleCount = 700,
-  rangeY = 100,
+  // rangeY = 100,
   baseHue = 220,
   baseSpeed = 0.05,
   rangeSpeed = 0.1,
@@ -53,7 +53,7 @@ export const Vortex = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const particlePool = useRef<any[]>([]);
+  const particlePool = useRef<unknown[]>([]);
   const particleCountRef = useRef(particleCount);
   const mousePosition = useRef({ x: 0, y: 0 });
 
@@ -65,16 +65,16 @@ export const Vortex = ({
     const context = canvas.getContext("2d");
     if (!context) return;
 
-    let w = container.offsetWidth;
-    let h = container.offsetHeight;
-    let screenCenter = { x: w / 2, y: h / 2 };
+    const w = container.offsetWidth;
+    const h = container.offsetHeight;
+    // const screenCenter = { x: w / 2, y: h / 2 };
 
     const resize = () => {
-      w = container.offsetWidth;
-      h = container.offsetHeight;
+      const w = container.offsetWidth;
+      const h = container.offsetHeight;
       canvas.width = w;
       canvas.height = h;
-      screenCenter = { x: w / 2, y: h / 2 };
+      // screenCenter = { x: w / 2, y: h / 2 };
     };
 
     window.addEventListener("resize", resize);
