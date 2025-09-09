@@ -148,7 +148,7 @@ export const Vortex = ({
     const animate = () => {
       context.clearRect(0, 0, w, h);
       for (const particle of particlePool.current) {
-        particle.draw(context);
+        (particle as Particle).draw(context);
       }
       animationFrameId = requestAnimationFrame(animate);
     };
