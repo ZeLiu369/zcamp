@@ -1,12 +1,13 @@
 // In frontend/src/app/location/[id]/photos/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
+import { useParams } from "next/navigation";
 import { useAuth } from "@/context/auth-provider";
 import { ImageGallery } from "@/components/components/ImageGallery";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 // Re-using the same interfaces from the detail page
 interface CampgroundImage {
@@ -27,38 +28,57 @@ export default function PhotosPage() {
   const [location, setLocation] = useState<LocationData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchLocationData = async () => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations/${id}`
-      );
-      if (!response.ok) throw new Error("Failed to fetch location data.");
-      const data = await response.json();
-      setLocation(data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const baseUrl =
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    (typeof window !== "undefined" ? window.location.origin : "");
+
+  const fetchLocationData = useCallback(
+    async (signal?: AbortSignal) => {
+      if (!id) return;
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `${baseUrl}/api/locations/${encodeURIComponent(id)}`,
+          {
+            credentials: "include",
+            signal,
+          }
+        );
+        if (!res.ok)
+          throw new Error(`Failed to fetch location data: ${res.status}`);
+        const data: LocationData = await res.json();
+        setLocation(data);
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
+        console.error(error);
+      } finally {
+        if (!signal?.aborted) setLoading(false);
+      }
+    },
+    [id, baseUrl]
+  );
 
   useEffect(() => {
-    if (id) {
-      fetchLocationData();
-    }
-  }, [id]);
+    if (!id) return;
+    const controller = new AbortController();
+    fetchLocationData(controller.signal);
+    return () => controller.abort();
+  }, [id, fetchLocationData]);
 
   const handleDeleteImage = async (imageId: string) => {
     if (!user) return;
-    if (confirm("Are you sure you want to delete this image?")) {
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/images/${imageId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
+    if (!confirm("Are you sure you want to delete this image?")) return;
+
+    try {
+      const res = await fetch(
+        `${baseUrl}/api/images/${encodeURIComponent(imageId)}`,
+        { method: "DELETE", credentials: "include" }
       );
-      fetchLocationData(); // Refetch after deletion
+      if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
+      await fetchLocationData();
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to delete image.");
     }
   };
 
