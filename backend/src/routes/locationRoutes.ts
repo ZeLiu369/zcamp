@@ -15,7 +15,7 @@ const locationRoutes = Router();
 
 // Define the API endpoint: GET /api/locations
 // GET /api/locations - Get all locations with extra preview data
-locationRoutes.get('/locations', async (req: Request, res: Response) => {
+locationRoutes.get('/locations', async (_req: Request, res: Response) => {
   try {
       const client = await pool.connect();
       try {

@@ -10,7 +10,7 @@ export const pool = new Pool({
 });
 
 // Listen for connection pool errors
-pool.on('error', (err, client) => {
+pool.on('error', (err, _client) => {
     console.error('Unexpected error in database connection pool', err);
     process.exit(-1); // Restart the application in case of severe errors
 });

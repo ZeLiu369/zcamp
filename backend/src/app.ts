@@ -81,7 +81,7 @@ async function bootstrap() {
 
   // Only log session details in development
   if (process.env.NODE_ENV !== 'production') {
-    app.use((req, res, next) => {
+    app.use((req, _res, next) => {
       console.log("====================================");
       console.log(`[${new Date().toLocaleTimeString()}] Request to ${req.path}`);
       console.log("--- Current Session State ---");

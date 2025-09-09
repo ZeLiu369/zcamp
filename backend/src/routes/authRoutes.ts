@@ -157,7 +157,7 @@ authRoutes.post('/login', async (req: Request, res: Response): Promise<any> => {
     }
 });
 
-authRoutes.post('/logout', (req: Request, res: Response):void => {
+authRoutes.post('/logout', (_req: Request, res: Response):void => {
     // Clear the cookie by setting its expiration date to the past
     res.cookie('authToken', '', {
         httpOnly: true,
@@ -204,14 +204,14 @@ authRoutes.post('/forgot-password', async (req: Request, res: Response): Promise
         await client.query('COMMIT');
 
         // Configure email transport using Mailtrap credentials from .env
-        const transport = nodemailer.createTransport({
-            host: process.env.MAIL_HOST,
-            port: Number(process.env.MAIL_PORT),
-            auth: {
-                user: process.env.MAIL_USER,
-                pass: process.env.MAIL_PASS,
-            },
-        });
+        // const transport = nodemailer.createTransport({
+        //     host: process.env.MAIL_HOST,
+        //     port: Number(process.env.MAIL_PORT),
+        //     auth: {
+        //         user: process.env.MAIL_USER,
+        //         pass: process.env.MAIL_PASS,
+        //     },
+        // });
         
         const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
