@@ -45,7 +45,9 @@ async function bootstrap() {
   // Enable Cross-Origin Resource Sharing so your frontend can call the backend
 
   app.use(cors({
-    origin: 'http://localhost:3000', // The origin of your frontend app
+    origin: process.env.NODE_ENV === 'production' 
+      ? process.env.FRONTEND_URL 
+      : 'http://localhost:3000',
     credentials: true,
   }));
 
@@ -77,15 +79,17 @@ async function bootstrap() {
   }));
 
 
-  app.use((req, res, next) => {
-    // print the current session content when each request arrives
-    console.log("====================================");
-    console.log(`[${new Date().toLocaleTimeString()}] Request to ${req.path}`);
-    console.log("--- Current Session State ---");
-    console.dir(req.session, { depth: null });
-    console.log("-----------------------------\n");
-    next();
-  });
+  // Only log session details in development
+  if (process.env.NODE_ENV !== 'production') {
+    app.use((req, res, next) => {
+      console.log("====================================");
+      console.log(`[${new Date().toLocaleTimeString()}] Request to ${req.path}`);
+      console.log("--- Current Session State ---");
+      console.dir(req.session, { depth: null });
+      console.log("-----------------------------\n");
+      next();
+    });
+  }
 
   app.use(passport.initialize());
   app.use(passport.session());

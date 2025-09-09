@@ -3,10 +3,10 @@ import { Pool } from 'pg';
 // Create a unique database connection pool instance from environment variables
 export const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    // In production, you may also want to configure SSL
-    // ssl: {
-    //   rejectUnauthorized: false
-    // }
+    // Enable SSL in production
+    ssl: process.env.NODE_ENV === 'production' ? {
+        rejectUnauthorized: false
+    } : false
 });
 
 // Listen for connection pool errors
