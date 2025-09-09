@@ -3,7 +3,7 @@ import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import nodemailer from 'nodemailer';
+// import nodemailer from 'nodemailer';
 import { emailService } from '#/services/emailService.js'; 
 import passport from 'passport';
 
