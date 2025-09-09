@@ -14,6 +14,7 @@ import React, {
   useMemo,
   useRef,
   useCallback,
+  Suspense,
 } from "react";
 import useSupercluster from "use-supercluster";
 import { Star } from "lucide-react";
@@ -113,7 +114,7 @@ const ClusterMarker = React.memo(
 
 ClusterMarker.displayName = "ClusterMarker";
 
-export default function ExplorePage() {
+function ExplorePageContent() {
   const isUserInteraction = useRef(false);
   const mapRef = useRef<MapRef>(null);
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -463,5 +464,25 @@ export default function ExplorePage() {
         <MapStyleControl currentStyle={mapStyle} onStyleChange={setMapStyle} />
       </div>
     </div>
+  );
+}
+
+// Loading component
+function ExploreLoading() {
+  return (
+    <div className="w-screen h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading map...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense fallback={<ExploreLoading />}>
+      <ExplorePageContent />
+    </Suspense>
   );
 }
