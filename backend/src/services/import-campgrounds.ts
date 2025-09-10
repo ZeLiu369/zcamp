@@ -16,16 +16,25 @@ out center;
 `;
 
 // Database connection configuration
+// const pool = new Pool({
+//     user: 'postgres',     
+//     password: 'postgres', 
+//     host: 'localhost',
+//     port: 5432,
+//     database: 'nationparkyelp',
+//     ssl: process.env.NODE_ENV === 'production' ? {
+//         rejectUnauthorized: false
+//     } : false
+// });
+
+
 const pool = new Pool({
-    user: 'postgres',     
-    password: 'postgres', 
-    host: 'localhost',
-    port: 5432,
-    database: 'nationparkyelp',
-    ssl: process.env.NODE_ENV === 'production' ? {
-        rejectUnauthorized: false
-    } : false
-});
+    connectionString: process.env.DATABASE_URL,
+        ssl: process.env.NODE_ENV === 'production' ? {
+            rejectUnauthorized: false
+        } : false
+    });
+    
 
 async function importData() {
     console.log("Querying Overpass API for campground data... This may take a moment.");

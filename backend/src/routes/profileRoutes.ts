@@ -4,17 +4,27 @@ import { authMiddleware } from '#app/middlewares/authMiddleware.js';
 import bcrypt from 'bcryptjs';
 
 const router = Router();
-const pool = new Pool({
-    user: 'postgres',     
-    password: 'postgres',  
-    host: 'localhost',
-    port: 5432,
-    database: 'nationparkyelp',
-    ssl: process.env.NODE_ENV === 'production' ? {
-        rejectUnauthorized: false
-    } : false
-});
+// const pool = new Pool({
+//     user: 'postgres',     
+//     password: 'postgres',  
+//     host: 'localhost',
+//     port: 5432,
+//     database: 'nationparkyelp',
+//     ssl: process.env.NODE_ENV === 'production' ? {
+//         rejectUnauthorized: false
+//     } : false
+// });
 
+
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+        ssl: process.env.NODE_ENV === 'production' ? {
+            rejectUnauthorized: false
+        } : false
+    });
+
+    
+    
 // GET /api/profile/me - Get the logged-in user's profile data
 router.get('/me', authMiddleware, async (req: Request, res: Response): Promise<any> => {
     const userId = req.user?.id;

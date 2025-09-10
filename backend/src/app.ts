@@ -105,7 +105,7 @@ async function bootstrap() {
 
   // --- Server Startup ---
   app.listen(port, () => {
-    console.log(`Backend server is running at http://localhost:${port}`);
+    console.log(`Backend server is running! 🚀`);
   });
 }
 

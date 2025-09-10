@@ -2,17 +2,25 @@ import { Router, Request, Response } from 'express';
 import { Pool } from 'pg';
 import { authMiddleware } from '#app/middlewares/authMiddleware.js'; 
 
-// Database connection configuration
+// // Database connection configuration
+// const pool = new Pool({
+//     user: 'postgres',      
+//     password: 'postgres',  
+//     host: 'localhost',
+//     port: 5432,
+//     database: 'nationparkyelp',
+//     ssl: process.env.NODE_ENV === 'production' ? {
+//       rejectUnauthorized: false
+//   } : false
+// });
+
 const pool = new Pool({
-    user: 'postgres',      
-    password: 'postgres',  
-    host: 'localhost',
-    port: 5432,
-    database: 'nationparkyelp',
-    ssl: process.env.NODE_ENV === 'production' ? {
-      rejectUnauthorized: false
-  } : false
-});
+  connectionString: process.env.DATABASE_URL,
+      ssl: process.env.NODE_ENV === 'production' ? {
+          rejectUnauthorized: false
+      } : false
+  });
+  
 
 const locationRoutes = Router();
 

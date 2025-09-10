@@ -4,16 +4,24 @@ import { authMiddleware } from '#app/middlewares/authMiddleware.js';
 
 const reviewRoutes = Router();
 
+// const pool = new Pool({
+//     user: 'postgres',      
+//     password: 'postgres', 
+//     host: 'localhost',
+//     port: 5432,
+//     database: 'nationparkyelp',
+//     ssl: process.env.NODE_ENV === 'production' ? {
+//         rejectUnauthorized: false
+//     } : false
+// });
+
 const pool = new Pool({
-    user: 'postgres',      
-    password: 'postgres', 
-    host: 'localhost',
-    port: 5432,
-    database: 'nationparkyelp',
-    ssl: process.env.NODE_ENV === 'production' ? {
-        rejectUnauthorized: false
-    } : false
-});
+    connectionString: process.env.DATABASE_URL,
+        ssl: process.env.NODE_ENV === 'production' ? {
+            rejectUnauthorized: false
+        } : false
+    });
+    
 
 // POST /api/reviews - Create a new review
 reviewRoutes.post('/', authMiddleware, async (req: Request, res: Response): Promise<any> => {

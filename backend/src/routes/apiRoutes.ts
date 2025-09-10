@@ -3,15 +3,22 @@ import axios from 'axios';
 import { Pool } from 'pg';
 import { authMiddleware } from '#app/middlewares/authMiddleware.js';
 
+// const pool = new Pool({
+//     user: 'postgres',      
+//     password: 'postgres', 
+//     host: 'localhost',
+//     port: 5432,
+//     database: 'nationparkyelp',
+//     ssl: process.env.NODE_ENV === 'production' ? {
+//       rejectUnauthorized: false
+//   } : false
+// });
+
 const pool = new Pool({
-    user: 'postgres',      
-    password: 'postgres', 
-    host: 'localhost',
-    port: 5432,
-    database: 'nationparkyelp',
+connectionString: process.env.DATABASE_URL,
     ssl: process.env.NODE_ENV === 'production' ? {
-      rejectUnauthorized: false
-  } : false
+        rejectUnauthorized: false
+    } : false
 });
 
 const apiRoutes = Router();

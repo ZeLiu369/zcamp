@@ -8,16 +8,24 @@ import { emailService } from '#app/services/emailService.js';
 import passport from 'passport';
 
 // Re-using the same pool configuration
+// const pool = new Pool({
+//     user: 'postgres',      
+//     password: 'postgres',  
+//     host: 'localhost',
+//     port: 5432,
+//     database: 'nationparkyelp',
+//     ssl: process.env.NODE_ENV === 'production' ? {
+//         rejectUnauthorized: false
+//     } : false
+// });
+
 const pool = new Pool({
-    user: 'postgres',      
-    password: 'postgres',  
-    host: 'localhost',
-    port: 5432,
-    database: 'nationparkyelp',
-    ssl: process.env.NODE_ENV === 'production' ? {
-        rejectUnauthorized: false
-    } : false
-});
+    connectionString: process.env.DATABASE_URL,
+        ssl: process.env.NODE_ENV === 'production' ? {
+            rejectUnauthorized: false
+        } : false
+    });
+    
 const authRoutes = Router();
 
 // Define the API endpoint: POST /api/auth/register
