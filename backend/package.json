@@ -20,7 +20,6 @@
   "description": "A web application to help people find and share information about campgrounds.",
   "devDependencies": {
     "@types/nodemailer": "^6.4.17",
-    "dotenv": "^17.2.1",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.4"
   },
@@ -45,6 +44,7 @@
     "connect-redis": "^9.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
     "helmet": "^8.1.0",
