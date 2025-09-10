@@ -10,6 +10,9 @@ const pool = new Pool({
     host: 'localhost',
     port: 5432,
     database: 'nationparkyelp',
+    ssl: process.env.NODE_ENV === 'production' ? {
+        rejectUnauthorized: false
+    } : false
 });
 
 // POST /api/reviews - Create a new review

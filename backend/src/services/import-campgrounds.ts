@@ -17,11 +17,14 @@ out center;
 
 // Database connection configuration
 const pool = new Pool({
-    user: 'postgres',      // <-- PUT YOUR USERNAME HERE
-    password: 'postgres',  // <-- PUT YOUR PASSWORD HERE
+    user: 'postgres',     
+    password: 'postgres', 
     host: 'localhost',
     port: 5432,
     database: 'nationparkyelp',
+    ssl: process.env.NODE_ENV === 'production' ? {
+        rejectUnauthorized: false
+    } : false
 });
 
 async function importData() {

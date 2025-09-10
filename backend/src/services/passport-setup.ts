@@ -5,14 +5,18 @@ import { Strategy as TwitterStrategy } from '@superfaceai/passport-twitter-oauth
 import { Strategy as GitHubStrategy } from 'passport-github2';
 import { Pool } from 'pg';
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({ connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? {
+        rejectUnauthorized: false
+    } : false
+ });
 
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID as string,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     callbackURL: "/api/auth/google/callback",
     state : true,
-    pkce: true
+    pkce: true,
 },
 async (_accessToken: string, _refreshToken: string, profile: any, done: any) => {
     const client = await pool.connect();
