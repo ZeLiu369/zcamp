@@ -341,6 +341,10 @@ function ExplorePageContent() {
           onLoad={handleMapMove}
           mapStyle={mapStyle}
         >
+          <MapStyleControl
+            currentStyle={mapStyle}
+            onStyleChange={setMapStyle}
+          />
           <NavigationControl position="bottom-right" />
           <GeolocateControl position="bottom-right" />
 
@@ -460,8 +464,6 @@ function ExplorePageContent() {
             </Popup>
           )}
         </Map>
-
-        <MapStyleControl currentStyle={mapStyle} onStyleChange={setMapStyle} />
       </div>
     </div>
   );
