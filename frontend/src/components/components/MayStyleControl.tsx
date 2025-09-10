@@ -30,7 +30,7 @@ export function MapStyleControl({
   onStyleChange,
 }: MapStyleControlProps) {
   return (
-    <div className="absolute top-2 right-2.5 z-10">
+    <div className="absolute top-2 right-2.5 z-50">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon" className="bg-white">
