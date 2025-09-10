@@ -4,7 +4,6 @@ import Link from "next/link";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { CometCard } from "@/components/ui/comet-card";
 import { InteractiveBackground } from "@/components/ui/InteractiveBackground";
-// import { Star } from "lucide-react";
 
 const featuredCampgrounds = [
   {
@@ -70,7 +69,7 @@ export function Featured() {
                             fill
                             className="absolute inset-0 h-full w-full rounded-[16px] object-cover contrast-90"
                             alt={`Photo of ${camp.name}`}
-                            priority
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                             style={{
                               boxShadow: "rgba(0, 0, 0, 0.05) 0px 5px 6px 0px",
                             }}

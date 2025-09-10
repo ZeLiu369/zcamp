@@ -21,6 +21,8 @@ export const CometCard = ({
   children: React.ReactNode;
 }) => {
   const ref = useRef<HTMLDivElement>(null);
+  const rAFRef = useRef<number | null>(null);
+  const pendingEvent = useRef<{ x: number; y: number } | null>(null);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -31,23 +33,23 @@ export const CometCard = ({
   const rotateX = useTransform(
     mouseYSpring,
     [-0.5, 0.5],
-    [`-${rotateDepth}deg`, `${rotateDepth}deg`],
+    [`-${rotateDepth}deg`, `${rotateDepth}deg`]
   );
   const rotateY = useTransform(
     mouseXSpring,
     [-0.5, 0.5],
-    [`${rotateDepth}deg`, `-${rotateDepth}deg`],
+    [`${rotateDepth}deg`, `-${rotateDepth}deg`]
   );
 
   const translateX = useTransform(
     mouseXSpring,
     [-0.5, 0.5],
-    [`-${translateDepth}px`, `${translateDepth}px`],
+    [`-${translateDepth}px`, `${translateDepth}px`]
   );
   const translateY = useTransform(
     mouseYSpring,
     [-0.5, 0.5],
-    [`${translateDepth}px`, `-${translateDepth}px`],
+    [`${translateDepth}px`, `-${translateDepth}px`]
   );
 
   const glareX = useTransform(mouseXSpring, [-0.5, 0.5], [0, 100]);
@@ -57,20 +59,24 @@ export const CometCard = ({
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!ref.current) return;
-
     const rect = ref.current.getBoundingClientRect();
-
     const width = rect.width;
     const height = rect.height;
-
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-
-    const xPct = mouseX / width - 0.5;
-    const yPct = mouseY / height - 0.5;
-
-    x.set(xPct);
-    y.set(yPct);
+    pendingEvent.current = {
+      x: mouseX / width - 0.5,
+      y: mouseY / height - 0.5,
+    };
+    rAFRef.current ??= requestAnimationFrame(() => {
+      if (pendingEvent.current) {
+        x.set(pendingEvent.current.x);
+        y.set(pendingEvent.current.y);
+      }
+      pendingEvent.current = null;
+      if (rAFRef.current) cancelAnimationFrame(rAFRef.current);
+      rAFRef.current = null;
+    });
   };
 
   const handleMouseLeave = () => {
@@ -79,7 +85,12 @@ export const CometCard = ({
   };
 
   return (
-    <div className={cn("perspective-distant transform-3d", className)}>
+    <div
+      className={cn(
+        "perspective-distant transform-3d will-change-[transform,filter]",
+        className
+      )}
+    >
       <motion.div
         ref={ref}
         onMouseMove={handleMouseMove}
@@ -90,7 +101,8 @@ export const CometCard = ({
           translateX,
           translateY,
           boxShadow:
-            "rgba(0, 0, 0, 0.01) 0px 520px 146px 0px, rgba(0, 0, 0, 0.04) 0px 333px 133px 0px, rgba(0, 0, 0, 0.26) 0px 83px 83px 0px, rgba(0, 0, 0, 0.29) 0px 21px 46px 0px",
+            "rgba(0, 0, 0, 0.08) 0px 40px 60px -20px, rgba(0, 0, 0, 0.12) 0px 20px 30px -10px",
+          willChange: "transform, filter",
         }}
         initial={{ scale: 1, z: 0 }}
         whileHover={{
@@ -105,7 +117,7 @@ export const CometCard = ({
           className="pointer-events-none absolute inset-0 z-50 h-full w-full rounded-[16px] mix-blend-overlay"
           style={{
             background: glareBackground,
-            opacity: 0.6,
+            opacity: 0.45,
           }}
           transition={{ duration: 0.2 }}
         />

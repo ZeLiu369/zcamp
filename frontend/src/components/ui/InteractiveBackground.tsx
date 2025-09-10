@@ -10,9 +10,39 @@ export function InteractiveBackground({
 }: PropsWithChildren<DivProps>) {
   const rootRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
-  const target = useRef({ x: 50, y: 50 }); // 百分比
-  const pos = useRef({ x: 50, y: 50 }); // 百分比
+  const target = useRef({ x: 50, y: 50 });
+  const pos = useRef({ x: 50, y: 50 });
   const reduceMotion = useRef(false);
+  const stopTimerRef = useRef<number | null>(null);
+
+  const startAnimation = () => {
+    if (reduceMotion.current) return;
+    if (rafRef.current != null) return;
+    const animate = () => {
+      // Inertial interpolation, "feel more smooth"
+      pos.current.x += (target.current.x - pos.current.x) * 0.12;
+      pos.current.y += (target.current.y - pos.current.y) * 0.12;
+      if (rootRef.current) {
+        rootRef.current.style.setProperty("--spot-x", `${pos.current.x}%`);
+        rootRef.current.style.setProperty("--spot-y", `${pos.current.y}%`);
+      }
+      rafRef.current = requestAnimationFrame(animate);
+    };
+    rafRef.current = requestAnimationFrame(animate);
+  };
+
+  const stopAnimationSoon = (delayMs: number = 300) => {
+    if (stopTimerRef.current) {
+      window.clearTimeout(stopTimerRef.current);
+      stopTimerRef.current = null;
+    }
+    stopTimerRef.current = window.setTimeout(() => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    }, delayMs);
+  };
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -25,21 +55,9 @@ export function InteractiveBackground({
       rootRef.current.style.setProperty("--spot-x", "50%");
       rootRef.current.style.setProperty("--spot-y", "50%");
     }
-    const animate = () => {
-      // 惯性插值，手感更柔和
-      pos.current.x += (target.current.x - pos.current.x) * 0.12;
-      pos.current.y += (target.current.y - pos.current.y) * 0.12;
-      if (rootRef.current) {
-        rootRef.current.style.setProperty("--spot-x", `${pos.current.x}%`);
-        rootRef.current.style.setProperty("--spot-y", `${pos.current.y}%`);
-      }
-      rafRef.current = requestAnimationFrame(animate);
-    };
-    if (!reduceMotion.current) {
-      rafRef.current = requestAnimationFrame(animate);
-    }
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (stopTimerRef.current) window.clearTimeout(stopTimerRef.current);
     };
   }, []);
 
@@ -49,7 +67,9 @@ export function InteractiveBackground({
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     target.current = { x, y };
-    // 减动效下，直接设置为目标（不启用 rAF 动画）
+    startAnimation();
+    stopAnimationSoon(400);
+    // When reducing motion, set the target directly (without enabling rAF animation)
     if (reduceMotion.current && rootRef.current) {
       rootRef.current.style.setProperty("--spot-x", `${x}%`);
       rootRef.current.style.setProperty("--spot-y", `${y}%`);
@@ -58,6 +78,8 @@ export function InteractiveBackground({
 
   const onPointerLeave = () => {
     target.current = { x: 50, y: 50 };
+    startAnimation();
+    stopAnimationSoon(500);
   };
 
   return (
@@ -85,24 +107,24 @@ export function InteractiveBackground({
           backgroundImage:
             "linear-gradient(to right, rgba(0,0,0,0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.12) 1px, transparent 1px)",
           backgroundSize: "20px 20px",
+          // To avoid continuous mask redraw, shrink the radius and let the GPU handle it more easily
           maskImage:
-            "radial-gradient(1600px circle at var(--spot-x, 50%) var(--spot-y, 50%), black 35%, transparent 60%)",
+            "radial-gradient(800px circle at var(--spot-x, 50%) var(--spot-y, 50%), black 35%, transparent 60%)",
           WebkitMaskImage:
-            "radial-gradient(1200px circle at var(--spot-x, 50%) var(--spot-y, 50%), black 35%, transparent 60%)",
+            "radial-gradient(800px circle at var(--spot-x, 50%) var(--spot-y, 50%), black 35%, transparent 60%)",
         }}
       />
-      {/* 背景层：3) 慢速彩色光环（非常淡），用现成的 spin 关键帧 */}
+      {/* // background layer: 3) Slow colored halo (very faint), using existing spin keyframes */}
       <div
         aria-hidden
         className="pointer-events-none absolute -inset-40 mix-blend-overlay"
         style={{
-          opacity: 0.35,
+          opacity: 0.25,
           background:
             "conic-gradient(from 180deg at 50% 50%, #06b6d4, #a855f7, #22c55e, #06b6d4)", // cyan → violet → green
-          animation: reduceMotion.current
-            ? undefined
-            : "spin 20s linear infinite",
-          // 让边缘更柔，防止突兀的硬边
+          // To reduce continuous animation and lower GPU pressure
+          animation: undefined,
+          // To make the edges softer and prevent abrupt hard edges
           maskImage:
             "radial-gradient(80% 80% at 50% 50%, black 60%, transparent 100%)",
           WebkitMaskImage:
