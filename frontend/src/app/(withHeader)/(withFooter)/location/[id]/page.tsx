@@ -219,29 +219,35 @@ export default function LocationDetailPage() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const files = e.target.files;
-
-      // --- 1. Define the max file count ---
       const maxFiles = 10;
+      const tenMB = 10 * 1024 * 1024;
 
-      // --- 2. Check the total file count ---
-      // It's best to check the count before checking individual file sizes.
+      const allowedTypes = ["image/jpeg", "image/png"];
+
       if (files.length > maxFiles) {
         toast.error(
           `You can only upload a maximum of ${maxFiles} photos at a time.`
         );
-        e.target.value = ""; // Clear the invalid selection
+        e.target.value = "";
         setSelectedFiles(null);
-        return; // Stop the function
+        return;
       }
 
-      // --- 3.Check individual file sizes) ---
-      const tenMB = 10 * 1024 * 1024;
-      for (const file of files) {
+      for (const file of Array.from(files)) {
+        if (!allowedTypes.includes(file.type)) {
+          toast.error(
+            `"${file.name}" is not a supported file type. Please upload only JPEG, JPG, or PNG images.`
+          );
+          e.target.value = ""; // Clear the input
+          setSelectedFiles(null);
+          return; // Stop the function
+        }
+
         if (file.size > tenMB) {
           toast.error(
             `File "${file.name}" is too large. Please select files smaller than 10MB.`
           );
-          e.target.value = ""; // Clear the input
+          e.target.value = "";
           setSelectedFiles(null);
           return;
         }
@@ -384,6 +390,7 @@ export default function LocationDetailPage() {
                       type="file"
                       onChange={handleFileSelect}
                       multiple
+                      accept="image/png, image/jpeg"
                     />
                   </div>
                   <Button type="submit" disabled={uploading || !selectedFiles}>

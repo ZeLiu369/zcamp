@@ -10,20 +10,22 @@ const router = Router();
 // Configure Multer to store files in memory
 // We will get the file as a buffer and stream it directly to S3.
 const storage = multer.memoryStorage();
+
+const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+    if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+        cb(null, true); // Accept the file
+    } else {
+        cb(new Error('Invalid file type, only JPEG and PNG is allowed!')); // Reject the file
+    }
+};
+
+
 const upload = multer({
     storage: storage,
     limits: { 
         fileSize: 10 * 1024 * 1024 // Limit each file to maximum 10MB
     },
-    fileFilter: (_req, file, cb) => {
-        // Only accept common image formats
-        if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
-            cb(null, true);
-        } else {
-            // Reject all other file types
-            cb(new Error('Invalid file type, only JPEG and PNG is allowed!'));
-        }
-    }
+    fileFilter: fileFilter
 });
 
 // POST /api/locations/:id/images - Upload an image for a specific campground
