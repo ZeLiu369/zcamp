@@ -72,8 +72,8 @@ async function bootstrap() {
     store: redisStore, 
     cookie: {
       httpOnly: true,
-      sameSite: 'lax',          // OAuth callback needs; for cross-site deployment, change to 'none' and配合 secure: true
-      secure: 'auto',           // Automatically secure under HTTPS
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',          // OAuth callback needs; for cross-site deployment, change to 'none' and配合 secure: true
+      secure: process.env.NODE_ENV === 'production',           // Automatically secure under HTTPS
       maxAge: 1000 * 60 * 10    // Session handshake period 10 minutes enough; you can also use 1 day
     }
   }));

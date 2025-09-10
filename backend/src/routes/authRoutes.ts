@@ -152,7 +152,7 @@ authRoutes.post('/login', async (req: Request, res: Response): Promise<any> => {
                         res.cookie('authToken', token, {
                         httpOnly: true, // Inaccessible to JavaScript
                         secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
-                        sameSite: 'lax', // Helps mitigate CSRF attacks
+                        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Helps mitigate CSRF attacks
                         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
                     });
                 // Send a success response without the token in the body
@@ -366,7 +366,7 @@ authRoutes.get('/google/callback', passport.authenticate('google', { failureRedi
     res.cookie('authToken', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 3600000
     });
 
@@ -385,7 +385,7 @@ authRoutes.get('/google/callback', passport.authenticate('google', { failureRedi
             res.clearCookie(sidName, {
                 path: '/',
                 httpOnly: true,
-                sameSite: 'lax',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
                 secure: process.env.NODE_ENV === 'production'
               });
             // 3. redirect to the frontend after all cleanup is done
@@ -422,7 +422,7 @@ authRoutes.get('/twitter',
       res.cookie('authToken', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 3600000
       });
   
@@ -441,7 +441,7 @@ authRoutes.get('/twitter',
           res.clearCookie(sidName, {
             path: '/',
             httpOnly: true,
-            sameSite: 'lax',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
             secure: process.env.NODE_ENV === 'production'
           });
           res.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
@@ -469,7 +469,7 @@ authRoutes.get('/github/callback',
     res.cookie('authToken', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 3600000
     });
 
@@ -488,7 +488,7 @@ authRoutes.get('/github/callback',
         res.clearCookie(sidName, {
           path: '/',
           httpOnly: true,
-          sameSite: 'lax',
+          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
           secure: process.env.NODE_ENV === 'production'
         });
         res.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
