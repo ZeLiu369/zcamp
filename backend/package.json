@@ -19,7 +19,6 @@
   "license": "ISC",
   "description": "A web application to help people find and share information about campgrounds.",
   "devDependencies": {
-    "@types/multer": "^2.0.0",
     "@types/nodemailer": "^6.4.17",
     "dotenv": "^17.2.1",
     "ts-node": "^10.9.2",
@@ -34,6 +33,7 @@
     "@types/cors": "^2.8.19",
     "@types/express-session": "^1.18.2",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
     "@types/node": "^24.3.1",
     "@types/passport": "^1.0.17",
     "@types/passport-facebook": "^3.0.3",
