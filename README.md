@@ -4,7 +4,8 @@
 
 ZCamp is a comprehensive full-stack web application that helps outdoor enthusiasts find and share amazing campgrounds. Built with modern technologies, it features interactive maps, secure authentication, cloud-based image storage, and a beautiful, responsive user interface.
 
-![ZCamp Hero](./frontend/public/image/star_camping.avif)
+<img width="1711" height="709" alt="image" src="https://github.com/user-attachments/assets/479bc49d-ebae-4f1c-82d4-66d460d5896e" />
+
 
 ## ✨ Features
 
