@@ -32,12 +32,18 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const checkAuthStatus = useCallback(async () => {
     try {
       // Get all information about the user, campgrounds, and reviews, username...
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/profile/me`,
         {
           credentials: "include", // IMPORTANT: This tells fetch to send cookies
+          signal: controller.signal,
         }
       );
+
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const data = await response.json();
@@ -46,7 +52,13 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         setUser(null);
       }
     } catch (error) {
-      console.error("Could not verify auth status", error);
+      if (error instanceof Error && error.name === "AbortError") {
+        console.warn(
+          "Auth status check timed out - server might be starting up"
+        );
+      } else {
+        console.error("Could not verify auth status", error);
+      }
       setUser(null);
     } finally {
       setIsLoading(false);

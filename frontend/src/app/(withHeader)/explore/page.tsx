@@ -252,9 +252,14 @@ function ExplorePageContent() {
     setPopupInfo(null);
   };
 
+  const [isLoadingLocations, setIsLoadingLocations] = useState(true);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
   useEffect(() => {
     async function fetchLocations() {
       try {
+        setIsLoadingLocations(true);
+        setLocationError(null);
         const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/locations`;
         console.log(`Fetching from: ${apiUrl}`);
         const response = await fetch(apiUrl);
@@ -266,6 +271,11 @@ function ExplorePageContent() {
         console.log(`Fetched ${data.length} locations.`);
       } catch (error) {
         console.error(error);
+        setLocationError(
+          "Failed to load campground locations. This might be due to server startup - please wait a moment and refresh."
+        );
+      } finally {
+        setIsLoadingLocations(false);
       }
     }
     fetchLocations();
@@ -314,12 +324,50 @@ function ExplorePageContent() {
 
   return (
     <div className="w-screen h-screen">
-      {/* <div className="container"> */}
-      {/* <h1 className="absolute top-5 left-1/2 -translate-x-1/2 z-10 bg-white/80 backdrop-blur-sm px-6 py-2 rounded-full shadow-md text-2xl font-bold">
-        Explore All Campgrounds
-      </h1> */}
+      {/* Loading overlay */}
+      {isLoadingLocations && (
+        <div className="absolute inset-0 z-50 bg-white/90 backdrop-blur-sm flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-600 mb-2">Loading campgrounds...</p>
+            <p className="text-sm text-gray-500">
+              If this takes a while, our server might be starting up. Please
+              wait a moment.
+            </p>
+          </div>
+        </div>
+      )}
 
-      {/* <div className="max-w-full mx-auto h-[100vh] border border-gray-300 rounded-xl overflow-hidden shadow-xl"> */}
+      {/* Error overlay */}
+      {locationError && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 bg-red-50 border border-red-200 rounded-lg p-4 max-w-md shadow-lg">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg
+                className="h-5 w-5 text-red-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-800">{locationError}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-2 text-sm text-red-600 hover:text-red-500 underline"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="w-full h-full relative">
         <Map
           ref={mapRef}

@@ -94,6 +94,15 @@ async function bootstrap() {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Health check endpoint to prevent cold starts
+  app.get('/health', (_req, res) => {
+    res.status(200).json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
+    });
+  });
+
   // --- API Routes ---
   // Tell the app to use our new router for any URL that starts with /api
   app.use('/api', locationRoutes);

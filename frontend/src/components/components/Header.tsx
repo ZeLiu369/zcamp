@@ -76,7 +76,10 @@ export function Header() {
           About
         </Link>
         {isLoading ? (
-          <div className="h-8 w-20 bg-gray-200 rounded-md animate-pulse"></div>
+          <div className="flex gap-2">
+            <div className="h-8 w-16 bg-gray-200 rounded-md animate-pulse"></div>
+            <div className="h-8 w-20 bg-gray-200 rounded-md animate-pulse"></div>
+          </div>
         ) : user ? ( // NOSONAR
           <>
             <Link
@@ -145,7 +148,10 @@ export function Header() {
               About
             </Link>
             {isLoading ? (
-              <div className="h-8 w-20 bg-gray-200 rounded-md animate-pulse"></div>
+              <div className="flex flex-col gap-2">
+                <div className="h-6 w-16 bg-gray-200 rounded-md animate-pulse"></div>
+                <div className="h-6 w-20 bg-gray-200 rounded-md animate-pulse"></div>
+              </div>
             ) : user ? ( // NOSONAR
               <>
                 <Link

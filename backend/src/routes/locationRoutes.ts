@@ -27,40 +27,60 @@ const locationRoutes = Router();
 // Define the API endpoint: GET /api/locations
 // GET /api/locations - Get all locations with extra preview data
 locationRoutes.get('/locations', async (_req: Request, res: Response) => {
+  const startTime = Date.now();
   try {
       const client = await pool.connect();
       try {
-          // This advanced query joins locations with their average rating and first image
+          // Optimized query with better performance hints
           const query = `
               SELECT
                   l.id,
                   l.name,
                   ST_AsText(l.coordinates) as coords,
-                  -- Subquery to calculate the average rating
-                  (
-                      SELECT AVG(r.rating)
-                      FROM reviews r
-                      WHERE r.location_id = l.id
-                  ) as avg_rating,
-                  -- Subquery to get the URL of the first image
-                  (
-                      SELECT i.url
-                      FROM campground_images i
-                      WHERE i.location_id = l.id
-                      ORDER BY i.created_at
-                      LIMIT 1
-                  ) as image_url
+                  -- Use LEFT JOIN for better performance than subqueries
+                  COALESCE(avg_ratings.avg_rating, NULL) as avg_rating,
+                  COALESCE(first_images.image_url, NULL) as image_url
               FROM
-                  locations l;
+                  locations l
+              LEFT JOIN (
+                  SELECT 
+                      location_id, 
+                      AVG(rating) as avg_rating
+                  FROM reviews 
+                  GROUP BY location_id
+              ) avg_ratings ON l.id = avg_ratings.location_id
+              LEFT JOIN (
+                  SELECT DISTINCT ON (location_id)
+                      location_id,
+                      url as image_url
+                  FROM campground_images
+                  ORDER BY location_id, created_at ASC
+              ) first_images ON l.id = first_images.location_id
+              ORDER BY l.name;
           `;
+          
           const result = await client.query(query);
+          const queryTime = Date.now() - startTime;
+          
+          console.log(`Locations query completed in ${queryTime}ms, returned ${result.rows.length} locations`);
+          
+          // Add cache headers for better performance
+          res.set({
+            'Cache-Control': 'public, max-age=300', // 5 minutes cache
+            'X-Query-Time': `${queryTime}ms`
+          });
+          
           res.status(200).json(result.rows);
       } finally {
           client.release();
       }
   } catch (error) {
-      console.error('Error querying locations', error);
-      res.status(500).json({ error: 'Internal server error' });
+      const queryTime = Date.now() - startTime;
+      console.error(`Error querying locations after ${queryTime}ms:`, error);
+      res.status(500).json({ 
+        error: 'Internal server error',
+        message: 'Failed to fetch campground locations. Please try again.'
+      });
   }
 });
 
